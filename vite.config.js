@@ -16,6 +16,7 @@ export default defineConfig({
       threshold: 1024,
     }),
   ],
+  publicDir: 'public',
   server: {
     host: '0.0.0.0',
     port: 5173,
@@ -51,6 +52,7 @@ export default defineConfig({
     sourcemap: false,
     chunkSizeWarningLimit: 1000,
     reportCompressedSize: true,
+    assetsInlineLimit: 4096,
   },
   esbuild: {
     logOverride: { 'this-is-undefined-in-esm': 'silent' },

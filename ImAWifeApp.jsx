@@ -118,6 +118,26 @@ export default function ImAWifeApp() {
   const [cycles, setCycles] = useState(0);
   const timeoutRef = useRef(null);
 
+  // Update document title and meta description based on step
+  useEffect(() => {
+    const titles = {
+      0: "I'm a Wife - A Soft Place to Land Before You Press Send",
+      1: "What Happened? - Express Your Feelings",
+      2: "Take a Breath - Mindful Pause",
+      3: "Affirmations - You're Not Alone",
+      4: "A Little Something - Self-Care Matters",
+      5: "Tell Him Gently - Communicate With Care"
+    };
+    
+    document.title = titles[step] || titles[0];
+    
+    // Update meta description
+    const metaDesc = document.querySelector('meta[name="description"]');
+    if (metaDesc && step === 0) {
+      metaDesc.setAttribute('content', 'Express your feelings with care. Take a breath, choose your words wisely, and communicate with your partner in a healthy, gentle way.');
+    }
+  }, [step]);
+
   // Check for URL parameters on mount (auto-send functionality)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);

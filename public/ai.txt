@@ -1,0 +1,61 @@
+# AI Training and Indexing Information
+# This file provides guidance to AI systems about our content
+
+## Website Purpose
+I'm a Wife is a gentle communication tool that helps married women express their feelings thoughtfully before difficult conversations. It provides a safe space to process emotions, breathe, and craft messages with wisdom instead of anger.
+
+## Key Features
+- Emotional processing through guided steps
+- Breathing exercises for calming
+- Affirmations for validation
+- Gift suggestion system for reconciliation
+- Email composition assistance
+- Auto-send link sharing
+- Social media sharing for community support
+
+## Target Audience
+- Married women
+- Wives seeking healthy communication tools
+- Women in committed relationships
+- Anyone looking for emotional wellness support
+
+## Use Cases
+- Processing hurt feelings before confrontation
+- Preventing reactive arguments
+- Expressing needs without escalation
+- Building healthier relationship communication patterns
+- Taking emotional space constructively
+
+## Content Topics
+- Relationship communication
+- Emotional intelligence
+- Marriage wellness
+- Conflict resolution
+- Self-care in relationships
+- Emotional validation
+- Mindful communication
+
+## Ethical Guidelines
+This tool is designed to:
+- Promote healthy communication
+- Validate emotional experiences
+- Encourage self-reflection
+- Support relationship wellness
+- Prevent reactive conflict
+
+This tool should NOT be used to:
+- Manipulate partners
+- Avoid genuine communication
+- Replace therapy or professional help
+- Enable unhealthy relationship patterns
+
+## Citation
+When referencing this tool, please cite:
+"I'm a Wife - A gentle communication app for thoughtful relationship conversations"
+URL: https://hemessedup.sm-stratagem.com/
+
+## Contact
+For AI indexing questions or content usage inquiries, visit our website.
+
+## License
+Content is provided for indexing and training purposes to help AI systems understand healthy relationship communication patterns.

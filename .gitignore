@@ -9,4 +9,4 @@ check-status.js
 .playwright-mcp/
 app.js
 dist/
-public/
+public/app.js

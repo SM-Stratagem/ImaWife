@@ -1,0 +1,20 @@
+# humanstxt.org
+
+/* TEAM */
+Project: I'm a Wife
+Site: https://hemessedup.sm-stratagem.com/
+Purpose: Healthy relationship communication
+
+/* THANKS */
+To all the wives who prioritize healthy communication over reactive arguments.
+
+/* SITE */
+Last update: 2026-06-18
+Standards: HTML5, CSS3, JavaScript ES6+
+Components: React, Vite
+Software: VS Code, Git
+Architecture: JAMstack, Serverless
+Hosting: Vercel
+Performance: Code splitting, Compression (Gzip/Brotli)
+Accessibility: WCAG 2.1 compliant
+Mobile: Progressive Web App (PWA)
