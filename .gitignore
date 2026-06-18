@@ -4,3 +4,9 @@ node_modules/
 .vscode/
 test-email.js
 check-status.js
+.vercel
+.vercel-prod.env
+.playwright-mcp/
+app.js
+dist/
+public/

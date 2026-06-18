@@ -30,18 +30,12 @@ import {
    storefront URLs you want the "buy this for her" buttons to use.
    ============================================================ */
 const GIFT_OPTIONS = [
-  { id: "flowers", label: "Fresh Flowers", icon: Flower2, link: "https://example.com/REPLACE-WITH-FLOWER-LINK" },
+  { id: "flowers", label: "Flowers", icon: Flower2, link: "https://example.com/REPLACE-WITH-FLOWER-LINK" },
   { id: "dessert", label: "Her Favorite Dessert", icon: Cookie, link: "https://example.com/REPLACE-WITH-DESSERT-LINK" },
   { id: "spa", label: "Spa Day", icon: Sparkles, link: "https://example.com/REPLACE-WITH-SPA-LINK" },
   { id: "jewelry", label: "Something Sparkly", icon: Gem, link: "https://example.com/REPLACE-WITH-JEWELRY-LINK" },
-  { id: "date", label: "Romantic Date Night", icon: Heart, link: "https://example.com/REPLACE-WITH-DATE-NIGHT-LINK" },
+  { id: "date", label: "Date Night", icon: Heart, link: "https://example.com/REPLACE-WITH-DATE-NIGHT-LINK" },
   { id: "surprise", label: "His Choice — Surprise Me", icon: Gift, link: "https://example.com/REPLACE-WITH-SURPRISE-LINK" },
-  { id: "book", label: "A Good Book", icon: Book, link: "https://example.com/REPLACE-WITH-BOOK-LINK" },
-  { id: "massage", label: "Full Body Massage", icon: Armchair, link: "https://example.com/REPLACE-WITH-MASSAGE-LINK" },
-  { id: "weekend", label: "Weekend Getaway", icon: Plane, link: "https://example.com/REPLACE-WITH-WEEKEND-LINK" },
-  { id: "cooking", label: "Cook Dinner Together", icon: ChefHat, link: "https://example.com/REPLACE-WITH-COOKING-LINK" },
-  { id: "movie", label: "Movie Night", icon: Film, link: "https://example.com/REPLACE-WITH-MOVIE-LINK" },
-  { id: "handwritten", label: "Handwritten Note", icon: PenTool, link: "https://example.com/REPLACE-WITH-NOTE-LINK" },
 ];
 
 const SITUATIONS = [
@@ -103,7 +97,7 @@ export default function ImAWifeApp() {
   const [giftIds, setGiftIds] = useState([]);
   const [recipientEmail, setRecipientEmail] = useState("");
   const [senderName, setSenderName] = useState("");
-  const [subject, setSubject] = useState("You Messed Up");
+  const [subject, setSubject] = useState("Something I wanted to share 💛");
   const [body, setBody] = useState("");
   const [bodyTouched, setBodyTouched] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -134,6 +128,15 @@ export default function ImAWifeApp() {
       setBody(buildBody());
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step]);
+
+  // Keep affirmation cycling alive while the user stays on step 3.
+  useEffect(() => {
+    if (step !== 3) return;
+    const interval = setInterval(() => {
+      setAffIndex((i) => (i + 1) % AFFIRMATIONS.length);
+    }, 2000);
+    return () => clearInterval(interval);
   }, [step]);
 
   function situationPhrase() {
@@ -203,7 +206,7 @@ export default function ImAWifeApp() {
     setEmailError("");
     
     try {
-      const response = await fetch('http://localhost:3001/api/send-email', {
+      const response = await fetch('/api/send-email', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -225,7 +228,7 @@ export default function ImAWifeApp() {
         setEmailError(data.error || 'Failed to send email');
       }
     } catch (error) {
-      setEmailError('Network error. Please check if the server is running.');
+      setEmailError('Network error. Check the deployed app or local Vercel dev server.');
       console.error('Email sending error:', error);
     } finally {
       setIsSendingEmail(false);
@@ -292,17 +295,10 @@ export default function ImAWifeApp() {
         /* Responsive containers */
         .iaw-card {
           background: #FFFCF8;
-          border-radius: 24px;
-          box-shadow: 0 10px 30px -15px rgba(61,38,48,0.25), 0 2px 6px rgba(61,38,48,0.05);
+          border-radius: 28px;
+          box-shadow: 0 20px 50px -20px rgba(61,38,48,0.35), 0 2px 8px rgba(61,38,48,0.06);
           width: 100%;
           margin: 0 auto;
-        }
-        
-        @media (min-width: 768px) {
-          .iaw-card {
-            border-radius: 28px;
-            box-shadow: 0 20px 50px -20px rgba(61,38,48,0.35), 0 2px 8px rgba(61,38,48,0.06);
-          }
         }
         
         /* Touch-friendly interactive elements */
@@ -312,9 +308,9 @@ export default function ImAWifeApp() {
           transition: all 0.18s ease;
           -webkit-tap-highlight-color: transparent;
         }
-        .iaw-chip:hover, .iaw-chip:active { 
-          border-color: #C96B5E; 
-          transform: translateY(-1px); 
+        .iaw-chip:hover, .iaw-chip:active {
+          border-color: #C96B5E;
+          transform: translateY(-1px);
         }
         .iaw-chip.selected {
           background: #C96B5E;
@@ -332,11 +328,12 @@ export default function ImAWifeApp() {
           align-items: center;
           justify-content: center;
           -webkit-tap-highlight-color: transparent;
+          border: none;
         }
-        .iaw-btn-primary:hover, .iaw-btn-primary:active { 
-          background: #B25749; 
-          transform: translateY(-1px); 
-          box-shadow: 0 10px 24px -8px rgba(201,107,94,0.55); 
+        .iaw-btn-primary:hover, .iaw-btn-primary:active {
+          background: #B25749;
+          transform: translateY(-1px);
+          box-shadow: 0 10px 24px -8px rgba(201,107,94,0.55);
         }
         .iaw-btn-primary:disabled { 
           opacity: 0.4; 
@@ -354,9 +351,11 @@ export default function ImAWifeApp() {
           align-items: center;
           justify-content: center;
           -webkit-tap-highlight-color: transparent;
+          transition: all 0.18s ease;
         }
-        .iaw-btn-ghost:hover, .iaw-btn-ghost:active { 
-          border-color: #6B4750; 
+        .iaw-btn-ghost:hover, .iaw-btn-ghost:active {
+          border-color: #6B4750;
+          transform: translateY(-1px);
         }
         
         /* Progress indicators */
@@ -606,11 +605,27 @@ export default function ImAWifeApp() {
         {step === 3 && (
           <div className="iaw-card iaw-fade-in w-full p-8 md:p-10 mt-4 flex flex-col items-center text-center">
             <h2 className="iaw-serif text-2xl md:text-3xl mb-6">A few true things.</h2>
+            <div className="w-full max-w-sm mb-5">
+              <div className="h-1.5 rounded-full bg-[#E2978C22] overflow-hidden">
+                <div
+                  className="h-full rounded-full"
+                  style={{
+                    width: "100%",
+                    background: "linear-gradient(90deg, #E2978C, #C96B5E)",
+                    animation: "iawAffirmationSweep 2s linear infinite",
+                    transformOrigin: "left center",
+                  }}
+                />
+              </div>
+              <p className="text-[11px] uppercase tracking-[0.18em] text-[#6B475099] mt-2">
+                Auto-rotates every 2 seconds
+              </p>
+            </div>
             <div
               className="rounded-3xl px-8 py-10 mb-6 w-full flex items-center justify-center"
               style={{ background: "linear-gradient(135deg, #F6DACE, #EFC9BD)", minHeight: 160 }}
             >
-              <p className="iaw-serif text-xl md:text-2xl leading-snug" style={{ color: "#3D2630" }}>
+              <p className="iaw-serif text-xl md:text-2xl leading-snug text-center max-w-md" style={{ color: "#3D2630" }}>
                 {AFFIRMATIONS[affIndex]}
               </p>
             </div>
@@ -648,18 +663,18 @@ export default function ImAWifeApp() {
           <div className="iaw-card iaw-fade-in w-full p-6 md:p-10 mt-4">
             <h2 className="iaw-serif text-2xl md:text-3xl mb-2">A little something would help.</h2>
             <p className="text-[#6B4750] mb-6 text-sm">Pick whatever sounds good. He's buying.</p>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 md:gap-3">
+            <div className="grid grid-cols-2 gap-3">
               {GIFT_OPTIONS.map((g) => {
                 const Icon = g.icon;
                 const sel = giftIds.includes(g.id);
                 return (
                   <button
                     key={g.id}
-                    className={`iaw-chip rounded-xl md:rounded-2xl px-3 py-4 md:px-4 md:py-5 flex flex-col items-center gap-2 text-xs md:text-sm font-medium text-center ${sel ? "selected" : ""}`}
+                    className={`iaw-chip rounded-2xl px-4 py-5 flex flex-col items-center gap-2 text-sm font-medium text-center ${sel ? "selected" : ""}`}
                     onClick={() => toggleGift(g.id)}
                   >
-                    <Icon size={18} className="md:size-[22px]" />
-                    <span className="whitespace-normal">{g.label}</span>
+                    <Icon size={22} />
+                    {g.label}
                   </button>
                 );
               })}
@@ -676,15 +691,14 @@ export default function ImAWifeApp() {
         )}
 
         {step === 5 && (
-          <div className="iaw-card iaw-fade-in w-full p-6 md:p-10 mt-4">
+          <div className="iaw-card iaw-fade-in w-full p-8 md:p-10 mt-4">
             <h2 className="iaw-serif text-2xl md:text-3xl mb-2">Tell him, gently.</h2>
             <p className="text-[#6B4750] mb-6 text-sm">Edit anything you want — it's your voice, not a script.</p>
 
-            {/* Link Pasting Section */}
-            <div className="mb-6 p-4 rounded-xl bg-[#FFF8F0] border border-[#E2978C33]">
-              <div className="flex items-center gap-2 mb-2">
+            <div className="rounded-[30px] border border-[#E2978C33] bg-[#FFF8F0] p-4 md:p-5 mb-5 shadow-[0_14px_30px_-26px_rgba(61,38,48,0.28)]">
+              <div className="flex items-center gap-2 mb-3">
                 <LinkIcon size={16} className="text-[#C96B5E]" />
-                <label className="text-sm font-medium text-[#3D2630]">Want to share a link with him?</label>
+                <label className="text-sm font-medium text-[#3D2630]">Share one useful link</label>
               </div>
               <div className="flex flex-col sm:flex-row gap-2">
                 <input
@@ -709,74 +723,78 @@ export default function ImAWifeApp() {
               </div>
               {pastedLink && (
                 <p className="text-xs text-[#6B475080] mt-2">
-                  ✓ Link added! It will appear in your email message.
+                  ✓ Link added. It will flow into the note automatically.
                 </p>
               )}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
-              <div>
-                <label className="text-xs uppercase tracking-wide text-[#6B475099] mb-1.5 block">His email</label>
-                <input className="iaw-input text-sm" type="email" placeholder="him@email.com" value={recipientEmail} onChange={(e) => setRecipientEmail(e.target.value)} />
+            <div className="rounded-[30px] border border-[#E2978C33] bg-[#FFFEFB] p-4 md:p-5 mb-5 shadow-[0_14px_30px_-26px_rgba(61,38,48,0.22)]">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+                <div>
+                  <label className="text-xs uppercase tracking-wide text-[#6B475099] mb-1.5 block">His email</label>
+                  <input className="iaw-input text-sm" type="email" placeholder="him@email.com" value={recipientEmail} onChange={(e) => setRecipientEmail(e.target.value)} />
+                </div>
+                <div>
+                  <label className="text-xs uppercase tracking-wide text-[#6B475099] mb-1.5 block">Your name</label>
+                  <input className="iaw-input text-sm" type="text" placeholder="Your name" value={senderName} onChange={(e) => setSenderName(e.target.value)} />
+                </div>
               </div>
-              <div>
-                <label className="text-xs uppercase tracking-wide text-[#6B475099] mb-1.5 block">Your name</label>
-                <input className="iaw-input text-sm" type="text" placeholder="Your name" value={senderName} onChange={(e) => setSenderName(e.target.value)} />
-              </div>
+
+              <label className="text-xs uppercase tracking-wide text-[#6B475099] mb-1.5 block">Subject</label>
+              <input className="iaw-input text-sm mb-2" type="text" value={subject} onChange={(e) => setSubject(e.target.value)} />
             </div>
 
-            <label className="text-xs uppercase tracking-wide text-[#6B475099] mb-1.5 block">Subject</label>
-            <input className="iaw-input text-sm mb-4" type="text" value={subject} onChange={(e) => setSubject(e.target.value)} />
-
-            <div className="flex items-center justify-between mb-1.5">
-              <label className="text-xs uppercase tracking-wide text-[#6B475099">Message</label>
-              <button className="text-xs flex items-center gap-1 text-[#C96B5E] hover:underline" onClick={regenerate}>
-                <RefreshCcw size={12} /> Rewrite for me
-              </button>
+            <div className="rounded-[30px] border border-[#E2978C33] bg-[#FFFDFC] p-4 md:p-5 mb-6 shadow-[0_14px_30px_-26px_rgba(61,38,48,0.22)]">
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-xs uppercase tracking-wide text-[#6B475099] block">Message</label>
+                <button className="text-xs flex items-center gap-1 text-[#C96B5E] hover:underline" onClick={regenerate}>
+                  <RefreshCcw size={12} /> Rewrite for me
+                </button>
+              </div>
+              <textarea
+                className="iaw-textarea text-sm"
+                rows={10}
+                value={body}
+                onChange={(e) => {
+                  setBody(e.target.value);
+                  setBodyTouched(true);
+                }}
+              />
             </div>
-            <textarea
-              className="iaw-textarea text-sm mb-6"
-              rows={10}
-              value={body}
-              onChange={(e) => {
-                setBody(e.target.value);
-                setBodyTouched(true);
-              }}
-            />
 
             {/* Status Messages */}
             {emailError && (
-              <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200">
+              <div className="mb-4 p-4 rounded-[24px] bg-red-50 border border-red-200">
                 <p className="text-sm text-red-700">{emailError}</p>
-                <p className="text-xs text-red-600 mt-1">Make sure the server is running: run "npm start" in terminal</p>
+                <p className="text-xs text-red-600 mt-1">Make sure the app endpoint is reachable on this origin.</p>
               </div>
             )}
             
             {emailSent && (
-              <div className="mb-4 p-3 rounded-lg bg-green-50 border border-green-200">
+              <div className="mb-4 p-4 rounded-[24px] bg-green-50 border border-green-200">
                 <p className="text-sm text-green-700 flex items-center gap-2">
                   <Check size={16} /> Email sent successfully via SMTP!
                 </p>
               </div>
             )}
 
-            <div className="flex flex-wrap gap-3 justify-between items-center">
-              <button className="iaw-btn-ghost rounded-full px-5 py-2.5 text-sm flex items-center gap-1.5" onClick={() => setStep(4)}>
+            <div className="flex flex-col-reverse md:flex-row gap-3 md:justify-between md:items-center">
+              <button className="iaw-btn-ghost rounded-full px-5 py-2.5 text-sm flex items-center gap-1.5 justify-center" onClick={() => setStep(4)}>
                 <ArrowLeft size={15} /> Back
               </button>
-              <div className="flex flex-wrap gap-3">
-                <button className="iaw-btn-ghost rounded-full px-5 py-2.5 text-sm flex items-center gap-1.5" onClick={handleCopy}>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full md:w-auto">
+                <button className="iaw-btn-ghost rounded-full px-5 py-2.5 text-sm flex items-center justify-center gap-1.5" onClick={handleCopy}>
                   {copied ? <Check size={15} /> : <Copy size={15} />} {copied ? "Copied" : "Copy"}
                 </button>
                 <button
-                  className="iaw-btn-primary rounded-full px-7 py-2.5 text-sm font-medium flex items-center gap-1.5"
+                  className="iaw-btn-primary rounded-full px-7 py-2.5 text-sm font-medium flex items-center justify-center gap-1.5"
                   disabled={!recipientEmail || isSendingEmail}
                   onClick={handleOpenMail}
                 >
                   <Mail size={15} /> Open Mail App
                 </button>
                 <button
-                  className="iaw-btn-primary rounded-full px-7 py-2.5 text-sm font-medium flex items-center gap-1.5"
+                  className="iaw-btn-primary rounded-full px-7 py-2.5 text-sm font-medium flex items-center justify-center gap-1.5"
                   style={{ background: '#4A6FA5' }}
                   disabled={!recipientEmail || isSendingEmail}
                   onClick={handleSendEmail}
@@ -794,6 +812,12 @@ export default function ImAWifeApp() {
         Made with care, for the moments that don't need a fight to be heard.<br />
         Not a substitute for actually talking to him — just a softer way in.
       </p>
+      <style>{`
+        @keyframes iawAffirmationSweep {
+          from { transform: scaleX(0); }
+          to { transform: scaleX(1); }
+        }
+      `}</style>
     </div>
   );
 }
