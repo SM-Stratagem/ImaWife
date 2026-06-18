@@ -22,6 +22,11 @@ import {
   Link as LinkIcon,
   Send,
   Loader,
+  Share2,
+  Download,
+  Camera,
+  Users,
+  MessageCircle,
 } from "lucide-react";
 
 /* ============================================================
@@ -31,7 +36,7 @@ import {
    ============================================================ */
 const GIFT_OPTIONS = [
   { id: "flowers", label: "Flowers", icon: Flower2, link: "https://example.com/REPLACE-WITH-FLOWER-LINK" },
-  { id: "dessert", label: "Her Favorite Dessert", icon: Cookie, link: "https://example.com/REPLACE-WITH-DESSERT-LINK" },
+  { id: "dessert", label: "My Favourite Dessert", icon: Cookie, link: "https://example.com/REPLACE-WITH-DESSERT-LINK" },
   { id: "spa", label: "Spa Day", icon: Sparkles, link: "https://example.com/REPLACE-WITH-SPA-LINK" },
   { id: "jewelry", label: "Something Sparkly", icon: Gem, link: "https://example.com/REPLACE-WITH-JEWELRY-LINK" },
   { id: "date", label: "Date Night", icon: Heart, link: "https://example.com/REPLACE-WITH-DATE-NIGHT-LINK" },
@@ -39,6 +44,7 @@ const GIFT_OPTIONS = [
 ];
 
 const SITUATIONS = [
+  { id: "gift", label: "I just want a gift", phrase: "I just want you to get me a gift — that's it, that's the tweet" },
   { id: "forgot", label: "He forgot something important", phrase: "you forgot something that mattered to me" },
   { id: "phone", label: "He was distracted / on his phone", phrase: "I felt like I was talking to your phone instead of you" },
   { id: "words", label: "Something he said stung", phrase: "something you said earlier really stuck with me" },
@@ -105,10 +111,93 @@ export default function ImAWifeApp() {
   const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const [emailError, setEmailError] = useState("");
+  const [showSocialShare, setShowSocialShare] = useState(false);
+  const [shareableLink, setShareableLink] = useState("");
 
   const [phaseIdx, setPhaseIdx] = useState(0);
   const [cycles, setCycles] = useState(0);
   const timeoutRef = useRef(null);
+
+  // Check for URL parameters on mount (auto-send functionality)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const autoSituation = params.get('situation');
+    const autoGifts = params.get('gifts');
+    const autoEmail = params.get('email');
+    const autoName = params.get('name');
+    const autoLink = params.get('link');
+    
+    if (autoSituation && autoEmail) {
+      // Auto-fill form
+      setSituationId(autoSituation);
+      setRecipientEmail(autoEmail);
+      if (autoName) setSenderName(autoName);
+      if (autoGifts) {
+        const giftArray = autoGifts.split(',');
+        setGiftIds(giftArray);
+      }
+      if (autoLink) setPastedLink(autoLink);
+      
+      // Build and send email automatically
+      setTimeout(() => {
+        const bodyText = buildBodyForParams(autoSituation, autoGifts, autoLink, autoName);
+        setBody(bodyText);
+        
+        // Auto-send after a short delay
+        setTimeout(() => {
+          sendEmailDirectly(autoEmail, autoName, bodyText);
+        }, 500);
+      }, 100);
+    }
+  }, []);
+
+  async function sendEmailDirectly(email, name, bodyText) {
+    try {
+      const response = await fetch('/api/send-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          recipientEmail: email,
+          senderName: name,
+          subject: subject || 'Something I wanted to share 💛',
+          body: bodyText,
+        }),
+      });
+      
+      if (response.ok) {
+        setEmailSent(true);
+        setStep(6); // Go to success screen
+      }
+    } catch (error) {
+      console.error('Auto-send failed:', error);
+    }
+  }
+
+  function buildBodyForParams(sitId, gifts, link, name) {
+    const situation = SITUATIONS.find(s => s.id === sitId);
+    const phrase = situation?.phrase || "something happened earlier that I want to be honest about";
+    
+    let giftText = "";
+    if (gifts) {
+      const giftArray = gifts.split(',');
+      const selectedGiftObjs = GIFT_OPTIONS.filter(g => giftArray.includes(g.id));
+      if (selectedGiftObjs.length > 0) {
+        const labels = selectedGiftObjs.map(g => g.label.toLowerCase());
+        let joined;
+        if (labels.length === 1) joined = labels[0];
+        else if (labels.length === 2) joined = `${labels[0]} and ${labels[1]}`;
+        else joined = `${labels.slice(0, -1).join(", ")}, and ${labels[labels.length - 1]}`;
+        giftText = `\n\nHonestly, ${joined} would go a long way right now.\n\n` + 
+          selectedGiftObjs.map(g => `${g.label}: ${g.link}`).join('\n');
+      }
+    }
+    
+    const linkText = link ? `\n\nHere's something I wanted to share with you: ${link}` : "";
+    
+    return `Hey love,\n\nI had a moment today — ${phrase}. I'm not upset forever, I just didn't want to swallow it and pretend it didn't happen.\n\nI'm okay. I just needed a minute, and I took it instead of snapping at you.${giftText}${linkText}\n\n— ${name || "Me"}`;
+  }
 
   // Breathing animation loop, only while on step 2
   useEffect(() => {
@@ -223,7 +312,12 @@ export default function ImAWifeApp() {
       
       if (response.ok) {
         setEmailSent(true);
-        setTimeout(() => setEmailSent(false), 3000);
+        // Generate shareable link
+        generateShareableLink();
+        // Show social share after 1 second
+        setTimeout(() => {
+          setShowSocialShare(true);
+        }, 1000);
       } else {
         setEmailError(data.error || 'Failed to send email');
       }
@@ -232,6 +326,65 @@ export default function ImAWifeApp() {
       console.error('Email sending error:', error);
     } finally {
       setIsSendingEmail(false);
+    }
+  }
+
+  function generateShareableLink() {
+    const baseUrl = window.location.origin + window.location.pathname;
+    const params = new URLSearchParams({
+      situation: situationId || 'other',
+      email: recipientEmail,
+      name: senderName || 'Your wife',
+    });
+    
+    if (giftIds.length > 0) {
+      params.set('gifts', giftIds.join(','));
+    }
+    if (pastedLink) {
+      params.set('link', pastedLink);
+    }
+    
+    const link = `${baseUrl}?${params.toString()}`;
+    setShareableLink(link);
+    return link;
+  }
+
+  function copyShareableLink() {
+    navigator.clipboard?.writeText(shareableLink).then(() => {
+      alert('Link copied! Share it anywhere to auto-send the message.');
+    });
+  }
+
+  function generateStorySnippet() {
+    const snippets = [
+      "When you need a minute before you respond 💭",
+      "Speaking up without starting a fight 💛",
+      "Choosing honesty over silence ✨",
+      "Your feelings matter, even the quiet ones 🌸",
+      "Taking space instead of snapping back 🌙",
+      "Because grown women don't slam doors 💪",
+    ];
+    const random = snippets[Math.floor(Math.random() * snippets.length)];
+    return `${random}\n\nI used I'm a Wife to tell him how I really feel.\n${window.location.origin}`;
+  }
+
+  function shareToStory(platform) {
+    const snippet = generateStorySnippet();
+    
+    if (platform === 'copy') {
+      navigator.clipboard?.writeText(snippet).then(() => {
+        alert('Story snippet copied! Paste it into your story.');
+      });
+    } else if (platform === 'instagram') {
+      // Instagram doesn't have direct story API, copy and guide user
+      navigator.clipboard?.writeText(snippet);
+      alert('Text copied! Open Instagram and paste into your story. 📸');
+    } else if (platform === 'facebook') {
+      const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.origin)}&quote=${encodeURIComponent(snippet)}`;
+      window.open(fbUrl, '_blank');
+    } else if (platform === 'twitter') {
+      const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(snippet)}`;
+      window.open(twitterUrl, '_blank');
     }
   }
 
@@ -295,45 +448,84 @@ export default function ImAWifeApp() {
         /* Responsive containers */
         .iaw-card {
           background: #FFFCF8;
-          border-radius: 28px;
-          box-shadow: 0 20px 50px -20px rgba(61,38,48,0.35), 0 2px 8px rgba(61,38,48,0.06);
+          border-radius: 42px;
+          box-shadow: 0 25px 60px -25px rgba(61,38,48,0.4), 0 3px 12px rgba(61,38,48,0.08);
           width: 100%;
           margin: 0 auto;
+          transform: rotate(-0.5deg);
+          transition: transform 0.3s ease;
+        }
+        
+        .iaw-card:hover {
+          transform: rotate(0deg) translateY(-2px);
         }
         
         /* Touch-friendly interactive elements */
         .iaw-chip {
-          border: 1.5px solid #E2978C55;
+          border: 2px solid #E2978C55;
           background: #FFFCF8;
-          transition: all 0.18s ease;
+          transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
           -webkit-tap-highlight-color: transparent;
+          position: relative;
+          overflow: hidden;
+        }
+        .iaw-chip::before {
+          content: '';
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          width: 0;
+          height: 0;
+          border-radius: 50%;
+          background: rgba(201, 107, 94, 0.1);
+          transform: translate(-50%, -50%);
+          transition: width 0.3s, height 0.3s;
+        }
+        .iaw-chip:hover::before, .iaw-chip:active::before {
+          width: 300px;
+          height: 300px;
         }
         .iaw-chip:hover, .iaw-chip:active {
           border-color: #C96B5E;
-          transform: translateY(-1px);
+          transform: translateY(-2px) scale(1.02);
+          box-shadow: 0 8px 16px -8px rgba(201,107,94,0.3);
         }
         .iaw-chip.selected {
-          background: #C96B5E;
+          background: linear-gradient(135deg, #C96B5E 0%, #E2978C 100%);
           border-color: #C96B5E;
           color: #FFF8F0;
+          transform: scale(1.05);
+          box-shadow: 0 12px 24px -10px rgba(201,107,94,0.5);
         }
         
         /* Buttons with touch-friendly sizing */
         .iaw-btn-primary {
-          background: #C96B5E;
+          background: linear-gradient(135deg, #C96B5E 0%, #E2978C 100%);
           color: #FFF8F0;
-          transition: all 0.18s ease;
-          min-height: 44px;
+          transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+          min-height: 48px;
           display: inline-flex;
           align-items: center;
           justify-content: center;
           -webkit-tap-highlight-color: transparent;
           border: none;
+          position: relative;
+          overflow: hidden;
+        }
+        .iaw-btn-primary::after {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 100%);
+          opacity: 0;
+          transition: opacity 0.3s;
+        }
+        .iaw-btn-primary:hover::after, .iaw-btn-primary:active::after {
+          opacity: 1;
         }
         .iaw-btn-primary:hover, .iaw-btn-primary:active {
-          background: #B25749;
-          transform: translateY(-1px);
-          box-shadow: 0 10px 24px -8px rgba(201,107,94,0.55);
+          transform: translateY(-2px) scale(1.05);
+          box-shadow: 0 15px 32px -12px rgba(201,107,94,0.6);
         }
         .iaw-btn-primary:disabled { 
           opacity: 0.4; 
@@ -345,17 +537,18 @@ export default function ImAWifeApp() {
         .iaw-btn-ghost {
           background: transparent;
           color: #6B4750;
-          border: 1.5px solid #6B475033;
-          min-height: 44px;
+          border: 2px solid #6B475033;
+          min-height: 48px;
           display: inline-flex;
           align-items: center;
           justify-content: center;
           -webkit-tap-highlight-color: transparent;
-          transition: all 0.18s ease;
+          transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
         .iaw-btn-ghost:hover, .iaw-btn-ghost:active {
           border-color: #6B4750;
-          transform: translateY(-1px);
+          transform: translateY(-1px) scale(1.02);
+          background: rgba(107, 71, 80, 0.05);
         }
         
         /* Progress indicators */
@@ -775,6 +968,74 @@ export default function ImAWifeApp() {
                 <p className="text-sm text-green-700 flex items-center gap-2">
                   <Check size={16} /> Email sent successfully via SMTP!
                 </p>
+              </div>
+            )}
+
+            {/* Social Sharing Component */}
+            {showSocialShare && emailSent && (
+              <div className="iaw-card mb-6 p-6 bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-200">
+                <div className="flex items-center gap-2 mb-3">
+                  <Share2 size={20} className="text-purple-600" />
+                  <h3 className="iaw-serif text-xl text-purple-900">Share your moment</h3>
+                </div>
+                <p className="text-sm text-purple-700 mb-4">
+                  Inspire other women to speak up. Share a snippet to your story!
+                </p>
+                
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
+                  <button
+                    className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-white border-2 border-purple-200 hover:border-purple-400 transition-all"
+                    onClick={() => shareToStory('instagram')}
+                  >
+                    <Camera size={24} className="text-pink-600" />
+                    <span className="text-xs font-medium text-purple-900">Instagram</span>
+                  </button>
+                  
+                  <button
+                    className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-white border-2 border-purple-200 hover:border-purple-400 transition-all"
+                    onClick={() => shareToStory('facebook')}
+                  >
+                    <Users size={24} className="text-blue-600" />
+                    <span className="text-xs font-medium text-purple-900">Facebook</span>
+                  </button>
+                  
+                  <button
+                    className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-white border-2 border-purple-200 hover:border-purple-400 transition-all"
+                    onClick={() => shareToStory('twitter')}
+                  >
+                    <MessageCircle size={24} className="text-sky-500" />
+                    <span className="text-xs font-medium text-purple-900">Twitter</span>
+                  </button>
+                  
+                  <button
+                    className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-white border-2 border-purple-200 hover:border-purple-400 transition-all"
+                    onClick={() => shareToStory('copy')}
+                  >
+                    <Copy size={24} className="text-purple-600" />
+                    <span className="text-xs font-medium text-purple-900">Copy Text</span>
+                  </button>
+                </div>
+
+                <div className="bg-white/60 rounded-xl p-3 border border-purple-200">
+                  <p className="text-xs text-purple-600 font-medium mb-2">Or share this auto-send link:</p>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      readOnly
+                      value={shareableLink}
+                      className="flex-1 text-xs px-3 py-2 bg-white rounded-lg border border-purple-200"
+                    />
+                    <button
+                      onClick={copyShareableLink}
+                      className="px-4 py-2 bg-purple-600 text-white rounded-lg text-xs font-medium hover:bg-purple-700 transition-all flex items-center gap-1"
+                    >
+                      <LinkIcon size={14} /> Copy
+                    </button>
+                  </div>
+                  <p className="text-[10px] text-purple-500 mt-2">
+                    Anyone who clicks this link will auto-send the message to the email you specified!
+                  </p>
+                </div>
               </div>
             )}
 
