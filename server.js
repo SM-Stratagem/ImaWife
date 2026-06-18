@@ -35,7 +35,7 @@ app.post('/api/send-email', async (req, res) => {
     const renderedBody = renderLinksInBody(body);
 
     const mailOptions = {
-      from: `"${senderName || 'I\\'m a Wife App'}" <${process.env.ZOHO_SMTP_USER}>`,
+      from: `"You Messed Up 💔" <${process.env.ZOHO_SMTP_USER}>`,
       to: recipientEmail,
       subject: subject || 'You Messed Up',
       text: renderedBody,
