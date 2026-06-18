@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <linearGradient id="bgGrad" x1="64" y1="48" x2="448" y2="464" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FBE7DC" />
+      <stop offset="0.35" stop-color="#F6DACE" />
+      <stop offset="0.7" stop-color="#EFC9BD" />
+      <stop offset="1" stop-color="#E8B6A8" />
+    </linearGradient>
+    <linearGradient id="heartGrad" x1="256" y1="160" x2="256" y2="400" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#E2978C" />
+      <stop offset="1" stop-color="#C96B5E" />
+    </linearGradient>
+    <filter id="shadow">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="4"/>
+      <feOffset dx="0" dy="4" result="offsetblur"/>
+      <feComponentTransfer>
+        <feFuncA type="linear" slope="0.3"/>
+      </feComponentTransfer>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Background Circle -->
+  <circle cx="256" cy="256" r="240" fill="url(#bgGrad)" />
+  
+  <!-- Heart Shape with Shadow -->
+  <g filter="url(#shadow)">
+    <path
+      d="M256 396c-6 0-12-2.2-16.6-6.4-47.4-42.8-87.4-79.2-113.2-110.6C103.4 250.8 93 225.2 93 198.6 93 159.2 125.6 128 165.4 128c24.6 0 47.4 12.2 61.2 32.2C240.2 140.2 263 128 287.6 128c39.8 0 72.4 31.2 72.4 70.6 0 26.6-10.4 52.2-34.2 80.4-25.8 31.4-65.8 67.8-113.2 110.6-4.6 4.2-10.6 6.4-16.6 6.4Z"
+      fill="url(#heartGrad)"
+    />
+  </g>
+  
+  <!-- Sparkle/Ring detail -->
+  <path
+    d="M336 160c32 0 58 26 58 58s-26 58-58 58"
+    stroke="#FFF8F0"
+    stroke-width="20"
+    stroke-linecap="round"
+    opacity="0.7"
+    fill="none"
+  />
+  
+  <!-- Small decorative dots -->
+  <circle cx="400" cy="200" r="8" fill="#FFF8F0" opacity="0.8"/>
+  <circle cx="420" cy="240" r="6" fill="#FFF8F0" opacity="0.6"/>
+  <circle cx="112" cy="280" r="8" fill="#FFF8F0" opacity="0.8"/>
+  <circle cx="92" cy="240" r="6" fill="#FFF8F0" opacity="0.6"/>
+</svg>
