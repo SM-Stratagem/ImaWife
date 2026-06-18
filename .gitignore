@@ -1,0 +1,6 @@
+node_modules/
+.env.local
+.env
+.vscode/
+test-email.js
+check-status.js

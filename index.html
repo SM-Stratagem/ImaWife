@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>I'm a Wife - A Gentle Communication App</title>
+    <meta name="description" content="A soft place to land before you press send. Express feelings constructively.">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1rem;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        
+        .container {
+            max-width: 800px;
+            width: 100%;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            padding: 2rem 1rem;
+        }
+        
+        h1 {
+            color: #3D2630;
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+        
+        .subtitle {
+            color: #6B4750;
+            font-size: 1.1rem;
+            line-height: 1.5;
+            max-width: 600px;
+            margin: 0 auto 2rem;
+        }
+        
+        .app-container {
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            min-height: 500px;
+        }
+        
+        .instructions {
+            background: #FFF8F0;
+            border: 1px solid #E2978C33;
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .instructions h2 {
+            color: #C96B5E;
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+        }
+        
+        .instructions ol {
+            padding-left: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .instructions li {
+            margin-bottom: 0.5rem;
+            line-height: 1.5;
+        }
+        
+        .server-status {
+            background: #f0f9ff;
+            border: 1px solid #93c5fd;
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .status-online {
+            color: #059669;
+            font-weight: 600;
+        }
+        
+        .status-offline {
+            color: #dc2626;
+            font-weight: 600;
+        }
+        
+        .buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        
+        @media (min-width: 640px) {
+            .buttons {
+                flex-direction: row;
+            }
+        }
+        
+        .btn {
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            font-weight: 600;
+            text-decoration: none;
+            text-align: center;
+            transition: all 0.2s;
+            flex: 1;
+            min-height: 52px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .btn-primary {
+            background: #C96B5E;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #B25749;
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background: #6B475033;
+            color: #3D2630;
+            border: 1px solid #6B475033;
+        }
+        
+        .btn-secondary:hover {
+            background: #6B475066;
+        }
+        
+        .features {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+        
+        @media (min-width: 640px) {
+            .features {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        .feature {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 16px;
+            border: 1px solid #E2978C33;
+        }
+        
+        .feature h3 {
+            color: #3D2630;
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+        }
+        
+        .feature p {
+            color: #6B4750;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 2rem 1rem;
+            color: #6B475080;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .heart {
+            color: #C96B5E;
+            margin: 0 0.25rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>I'm a Wife App</h1>
+            <p class="subtitle">
+                A soft place to land before you press send. Name what happened, breathe, remember you're not the problem — 
+                then tell him about it like a grown woman instead of a slammed door.
+            </p>
+        </header>
+        
+        <div class="instructions">
+            <h2>🚀 How to Get Started</h2>
+            <ol>
+                <li><strong>Install dependencies:</strong> Run <code>npm install</code> in terminal</li>
+                <li><strong>Start the server:</strong> Run <code>npm start</code> in terminal</li>
+                <li><strong>Open the app:</strong> The React app will load below automatically</li>
+                <li><strong>SMTP is configured:</strong> Email credentials are in <code>.env.local</code></li>
+            </ol>
+            
+            <div class="server-status">
+                <p><strong>Server Status:</strong> <span id="serverStatus" class="status-offline">Checking...</span></p>
+                <p id="serverMessage" style="margin-top: 0.5rem; font-size: 0.9rem;">
+                    The backend server needs to be running for SMTP email sending.
+                </p>
+            </div>
+        </div>
+        
+        <div class="app-container" id="app-root">
+            <div style="text-align: center; padding: 3rem 1rem; color: #6B4750;">
+                <p>Loading the app...</p>
+                <p style="margin-top: 1rem; font-size: 0.9rem;">If the app doesn't load, make sure you're running the React development server.</p>
+            </div>
+        </div>
+        
+        <div class="features">
+            <div class="feature">
+                <h3>📱 Mobile-First Design</h3>
+                <p>Optimized for all screen sizes with touch-friendly buttons and responsive layouts.</p>
+            </div>
+            <div class="feature">
+                <h3>✉️ SMTP Email</h3>
+                <p>Send emails directly via Zoho SMTP with "You Messed Up" as the subject.</p>
+            </div>
+            <div class="feature">
+                <h3>🔗 Link Sharing</h3>
+                <p>Paste any link to share products, articles, or videos in your email.</p>
+            </div>
+            <div class="feature">
+                <h3>💝 Expanded Options</h3>
+                <p>25 affirmations, 12 situations, and 12 gift ideas to choose from.</p>
+            </div>
+        </div>
+        
+        <div class="buttons">
+            <a href="#" class="btn btn-primary" id="startServerBtn">Start Server</a>
+            <a href="README.md" class="btn btn-secondary">View Full Documentation</a>
+        </div>
+        
+        <footer>
+            <p>
+                Made with <span class="heart">❤</span> for the moments that don't need a fight to be heard.<br>
+                Not a substitute for actually talking to him — just a softer way in.
+            </p>
+        </footer>
+    </div>
+
+    <script>
+        // Check server status
+        async function checkServerStatus() {
+            try {
+                const response = await fetch('http://localhost:3001/api/health', {
+                    method: 'GET',
+                    mode: 'cors',
+                    headers: {
+                        'Accept': 'application/json',
+                    }
+                });
+                
+                if (response.ok) {
+                    document.getElementById('serverStatus').className = 'status-online';
+                    document.getElementById('serverStatus').textContent = 'Online ✅';
+                    document.getElementById('serverMessage').textContent = 'Server is running and ready for SMTP email sending.';
+                } else {
+                    throw new Error('Server responded with error');
+                }
+            } catch (error) {
+                document.getElementById('serverStatus').className = 'status-offline';
+                document.getElementById('serverStatus').textContent = 'Offline ❌';
+                document.getElementById('serverMessage').textContent = 'Server not running. Run "npm start" in terminal to start it.';
+            }
+        }
+        
+        // Check status on load and every 10 seconds
+        checkServerStatus();
+        setInterval(checkServerStatus, 10000);
+        
+        // Start server button
+        document.getElementById('startServerBtn').addEventListener('click', function(e) {
+            e.preventDefault();
+            alert('Open terminal in this folder and run:\n\nnpm start\n\nThe server will start on http://localhost:3001');
+        });
+        
+        // Try to load the React app
+        function loadReactApp() {
+            // This would typically load a bundled React app
+            // For now, we'll show instructions
+            const appRoot = document.getElementById('app-root');
+            appRoot.innerHTML = `
+                <div style="text-align: center; padding: 2rem;">
+                    <h3 style="color: #3D2630; margin-bottom: 1rem;">React App Loading</h3>
+                    <p style="color: #6B4750; margin-bottom: 1.5rem;">
+                        The ImAWifeApp.jsx file contains the React application.<br>
+                        To run it, you need to set up a React development environment.
+                    </p>
+                    <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 12px; text-align: left; max-width: 500px; margin: 0 auto;">
+                        <p style="margin-bottom: 0.5rem;"><strong>Quick Setup:</strong></p>
+                        <ol style="padding-left: 1.5rem; font-size: 0.9rem;">
+                            <li style="margin-bottom: 0.5rem;">Install React dependencies if needed</li>
+                            <li style="margin-bottom: 0.5rem;">Run the development server</li>
+                            <li>The app will appear here automatically</li>
+                        </ol>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Load the app after a short delay
+        setTimeout(loadReactApp, 1000);
+    </script>
+</body>
+</html>
