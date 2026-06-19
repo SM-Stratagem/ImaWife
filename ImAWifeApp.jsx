@@ -13,27 +13,15 @@ import {
   Check,
   Copy,
   RefreshCcw,
-  Book,
-  Armchair,
-  Plane,
-  ChefHat,
-  Film,
-  PenTool,
   Link as LinkIcon,
   Send,
   Loader,
   Share2,
-  Download,
   Camera,
   Users,
   MessageCircle,
 } from "lucide-react";
 
-/* ============================================================
-   CONFIG — edit these before sharing the app.
-   Replace the placeholder `link` values with the real product /
-   storefront URLs you want the "buy this for her" buttons to use.
-   ============================================================ */
 const GIFT_OPTIONS = [
   { id: "flowers", label: "Flowers", icon: Flower2, link: "https://example.com/REPLACE-WITH-FLOWER-LINK" },
   { id: "dessert", label: "My Favourite Dessert", icon: Cookie, link: "https://example.com/REPLACE-WITH-DESSERT-LINK" },
@@ -63,7 +51,7 @@ const AFFIRMATIONS = [
   "Your feelings are real, even if no one else noticed them today.",
   "You can love him and still feel hurt by him in the same breath.",
   "Needing a minute before you respond isn't weakness — it's wisdom.",
-  "You don't have to perform \u201cfine.\u201d You're allowed to just be tired.",
+  "You don't have to perform “fine.” You're allowed to just be tired.",
   "Naming what hurt you isn't the same as starting a fight.",
   "You deserve care that doesn't require you to ask twice.",
   "It's okay to ask for what you need, even if it feels uncomfortable.",
@@ -88,15 +76,449 @@ const AFFIRMATIONS = [
 ];
 
 const BREATH_PHASES = [
-  { name: "Breathe in", ms: 4000, scale: 1.35 },
-  { name: "Hold", ms: 3000, scale: 1.35 },
+  { name: "Breathe in", ms: 4000, scale: 1.3 },
+  { name: "Hold", ms: 3000, scale: 1.3 },
   { name: "Breathe out", ms: 5000, scale: 1 },
 ];
 
 const STEP_LABELS = ["What happened", "Breathe", "Affirmations", "A little something", "Tell him"];
 
+const CSS = `
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,400..500&family=Work+Sans:wght@300;400;500;600&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  .iaw-root {
+    min-height: 100vh;
+    width: 100%;
+    font-family: 'Work Sans', system-ui, sans-serif;
+    color: #3D2630;
+    background: linear-gradient(160deg, #FEF5EF 0%, #F8E8DC 55%, #F1D9C8 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-bottom: 48px;
+  }
+
+  .iaw-serif { font-family: 'Fraunces', Georgia, serif; }
+
+  /* ── Wrapper ── */
+  .iaw-wrap {
+    width: 100%;
+    max-width: 580px;
+    padding: 0 18px;
+  }
+
+  /* ── Header ── */
+  .iaw-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 36px 0 20px;
+    gap: 14px;
+  }
+  .iaw-brand {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .iaw-brand-label {
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: #7A5560;
+    font-weight: 500;
+  }
+  .iaw-steps {
+    display: flex;
+    gap: 7px;
+    align-items: center;
+  }
+  .iaw-step-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #C96B5E30;
+    transition: all 0.3s ease;
+  }
+  .iaw-step-dot.active {
+    background: #C96B5E;
+    width: 20px;
+    border-radius: 3px;
+  }
+
+  /* ── Card ── */
+  .iaw-card {
+    background: #FFFCF9;
+    border-radius: 24px;
+    box-shadow:
+      0 2px 8px rgba(61, 38, 48, 0.06),
+      0 8px 32px rgba(61, 38, 48, 0.09);
+    width: 100%;
+    padding: 32px 28px;
+  }
+
+  /* ── Fade in ── */
+  .iaw-fade {
+    animation: iawFade 0.35s ease both;
+  }
+  @keyframes iawFade {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── Typography ── */
+  .iaw-title {
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: clamp(1.9rem, 7vw, 2.7rem);
+    font-weight: 400;
+    line-height: 1.2;
+    color: #3D2630;
+    margin-bottom: 14px;
+  }
+  .iaw-heading {
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: clamp(1.4rem, 5vw, 1.85rem);
+    font-weight: 400;
+    line-height: 1.3;
+    color: #3D2630;
+    margin-bottom: 8px;
+  }
+  .iaw-sub {
+    font-size: 14px;
+    line-height: 1.65;
+    color: #7A5560;
+    margin-bottom: 24px;
+  }
+  .iaw-field-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: #9B7080;
+    margin-bottom: 7px;
+  }
+
+  /* ── Situation chips ── */
+  .iaw-chip-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+  .iaw-chip {
+    width: 100%;
+    border: 1.5px solid #E0B8B033;
+    background: #FFFCF9;
+    border-radius: 14px;
+    padding: 14px 18px;
+    text-align: left;
+    font-size: 14px;
+    font-family: 'Work Sans', sans-serif;
+    font-weight: 500;
+    color: #3D2630;
+    cursor: pointer;
+    transition: border-color 0.16s, background 0.16s, color 0.16s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .iaw-chip:hover { border-color: #C96B5E66; background: #FFF8F5; }
+  .iaw-chip.selected { background: #C96B5E; border-color: #C96B5E; color: #fff; }
+
+  /* ── Gift grid ── */
+  .iaw-gift-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 28px;
+  }
+  .iaw-gift-chip {
+    border: 1.5px solid #E0B8B033;
+    background: #FFFCF9;
+    border-radius: 18px;
+    padding: 22px 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 9px;
+    font-size: 13px;
+    font-family: 'Work Sans', sans-serif;
+    font-weight: 500;
+    color: #3D2630;
+    cursor: pointer;
+    text-align: center;
+    transition: border-color 0.16s, background 0.16s, color 0.16s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .iaw-gift-chip:hover { border-color: #C96B5E66; background: #FFF8F5; }
+  .iaw-gift-chip.selected { background: #C96B5E; border-color: #C96B5E; color: #fff; }
+
+  /* ── Buttons ── */
+  .iaw-btn {
+    border: none;
+    border-radius: 50px;
+    font-family: 'Work Sans', sans-serif;
+    font-weight: 500;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    min-height: 48px;
+    padding: 12px 26px;
+    font-size: 14px;
+    transition: background 0.18s, transform 0.14s, opacity 0.18s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .iaw-btn:disabled { opacity: 0.38; cursor: not-allowed; transform: none !important; }
+
+  .iaw-btn-primary {
+    background: #C96B5E;
+    color: #fff;
+  }
+  .iaw-btn-primary:hover:not(:disabled) { background: #B55E52; transform: translateY(-1px); }
+
+  .iaw-btn-ghost {
+    background: transparent;
+    color: #7A5560;
+    border: 1.5px solid #7A556030;
+  }
+  .iaw-btn-ghost:hover:not(:disabled) { background: rgba(122, 85, 96, 0.06); border-color: #7A556088; }
+
+  .iaw-btn-blue {
+    background: #5A7BA6;
+    color: #fff;
+  }
+  .iaw-btn-blue:hover:not(:disabled) { background: #4D6E97; transform: translateY(-1px); }
+
+  .iaw-btn-sm {
+    min-height: 38px;
+    padding: 8px 18px;
+    font-size: 13px;
+  }
+
+  /* ── Nav row ── */
+  .iaw-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 28px;
+    gap: 12px;
+  }
+
+  /* ── Form inputs ── */
+  .iaw-input, .iaw-textarea {
+    width: 100%;
+    font-family: 'Work Sans', sans-serif;
+    font-size: 16px;
+    border: 1.5px solid #E0B8B044;
+    border-radius: 13px;
+    padding: 13px 16px;
+    background: #FFFEFB;
+    color: #3D2630;
+    transition: border-color 0.18s;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  .iaw-input:focus, .iaw-textarea:focus {
+    outline: none;
+    border-color: #C96B5E;
+  }
+  .iaw-textarea {
+    resize: vertical;
+    min-height: 160px;
+    line-height: 1.65;
+  }
+
+  /* ── Section panels ── */
+  .iaw-panel {
+    background: #FFF8F5;
+    border: 1px solid #E0B8B022;
+    border-radius: 18px;
+    padding: 20px;
+    margin-bottom: 14px;
+  }
+
+  /* ── Breathing circle ── */
+  .iaw-breath-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 8px 0 28px;
+  }
+  .iaw-breath-circle {
+    width: 154px;
+    height: 154px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 38% 32%, #F6DACE, #C96B5E 90%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform ease-in-out;
+    margin-bottom: 20px;
+  }
+
+  /* ── Affirmation ── */
+  .iaw-affirmation-box {
+    background: linear-gradient(135deg, #F8E2D4, #EEC9B8);
+    border-radius: 20px;
+    padding: 32px 26px;
+    min-height: 150px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    margin-bottom: 14px;
+  }
+  .iaw-affirmation-text {
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: clamp(1.05rem, 4vw, 1.25rem);
+    font-weight: 400;
+    line-height: 1.55;
+    color: #3D2630;
+  }
+  .iaw-aff-counter {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: #9B708088;
+    text-align: center;
+    margin-bottom: 18px;
+  }
+  .iaw-progress-bar {
+    height: 2px;
+    background: #E0B8B030;
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 6px;
+  }
+  .iaw-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #E2978C, #C96B5E);
+    border-radius: 2px;
+    transform-origin: left;
+    animation: iawSweep 2s linear infinite;
+  }
+  @keyframes iawSweep {
+    from { transform: scaleX(0); }
+    to   { transform: scaleX(1); }
+  }
+  .iaw-aff-controls {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 20px;
+  }
+
+  /* ── Send step ── */
+  .iaw-send-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 20px;
+  }
+  .iaw-send-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  /* ── Social share ── */
+  .iaw-share-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 9px;
+    margin-bottom: 14px;
+  }
+  .iaw-share-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 7px;
+    padding: 14px 10px;
+    background: #FFFCF9;
+    border: 1.5px solid #E0B8B033;
+    border-radius: 16px;
+    cursor: pointer;
+    font-size: 12px;
+    font-family: 'Work Sans', sans-serif;
+    font-weight: 500;
+    color: #3D2630;
+    transition: border-color 0.16s, background 0.16s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .iaw-share-btn:hover { border-color: #C96B5E55; background: #FFF8F5; }
+  .iaw-share-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 7px;
+  }
+  .iaw-share-link-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  /* ── Status banners ── */
+  .iaw-status-ok {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    background: #F0F9F0;
+    border: 1px solid #B8DEB8;
+    border-radius: 13px;
+    font-size: 13px;
+    color: #2A6630;
+    margin-bottom: 14px;
+  }
+  .iaw-status-err {
+    padding: 12px 16px;
+    background: #FEF0F0;
+    border: 1px solid #F5BABA;
+    border-radius: 13px;
+    font-size: 13px;
+    color: #C03030;
+    margin-bottom: 14px;
+  }
+
+  /* ── Footer ── */
+  .iaw-footer {
+    font-size: 11px;
+    color: #9B708070;
+    text-align: center;
+    padding: 0 24px 8px;
+    max-width: 380px;
+    line-height: 1.65;
+    margin-top: 8px;
+  }
+
+  /* ── Inline flex helpers ── */
+  .iaw-row { display: flex; align-items: center; gap: 8px; }
+  .iaw-row-between { display: flex; align-items: center; justify-content: space-between; }
+
+  /* ── Spinner ── */
+  @keyframes iawSpin { to { transform: rotate(360deg); } }
+  .iaw-spin { animation: iawSpin 0.9s linear infinite; }
+
+  /* ── Two-col email grid ── */
+  .iaw-email-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  @media (max-width: 380px) {
+    .iaw-card { padding: 24px 18px; }
+    .iaw-email-grid { grid-template-columns: 1fr; }
+    .iaw-send-row { grid-template-columns: 1fr; }
+  }
+`;
+
 export default function ImAWifeApp() {
-  const [step, setStep] = useState(0); // 0 = landing
+  const [step, setStep] = useState(0);
   const [situationId, setSituationId] = useState(null);
   const [customText, setCustomText] = useState("");
   const [affIndex, setAffIndex] = useState(0);
@@ -118,7 +540,6 @@ export default function ImAWifeApp() {
   const [cycles, setCycles] = useState(0);
   const timeoutRef = useRef(null);
 
-  // Update document title and meta description based on step
   useEffect(() => {
     const titles = {
       0: "I'm a Wife - A Soft Place to Land Before You Press Send",
@@ -126,100 +547,73 @@ export default function ImAWifeApp() {
       2: "Take a Breath - Mindful Pause",
       3: "Affirmations - You're Not Alone",
       4: "A Little Something - Self-Care Matters",
-      5: "Tell Him Gently - Communicate With Care"
+      5: "Tell Him Gently - Communicate With Care",
     };
-    
     document.title = titles[step] || titles[0];
-    
-    // Update meta description
-    const metaDesc = document.querySelector('meta[name="description"]');
-    if (metaDesc && step === 0) {
-      metaDesc.setAttribute('content', 'Express your feelings with care. Take a breath, choose your words wisely, and communicate with your partner in a healthy, gentle way.');
-    }
   }, [step]);
 
-  // Check for URL parameters on mount (auto-send functionality)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const autoSituation = params.get('situation');
-    const autoGifts = params.get('gifts');
-    const autoEmail = params.get('email');
-    const autoName = params.get('name');
-    const autoLink = params.get('link');
-    
+    const autoSituation = params.get("situation");
+    const autoGifts = params.get("gifts");
+    const autoEmail = params.get("email");
+    const autoName = params.get("name");
+    const autoLink = params.get("link");
+
     if (autoSituation && autoEmail) {
-      // Auto-fill form
       setSituationId(autoSituation);
       setRecipientEmail(autoEmail);
       if (autoName) setSenderName(autoName);
-      if (autoGifts) {
-        const giftArray = autoGifts.split(',');
-        setGiftIds(giftArray);
-      }
+      if (autoGifts) setGiftIds(autoGifts.split(","));
       if (autoLink) setPastedLink(autoLink);
-      
-      // Build and send email automatically
+
       setTimeout(() => {
         const bodyText = buildBodyForParams(autoSituation, autoGifts, autoLink, autoName);
         setBody(bodyText);
-        
-        // Auto-send after a short delay
-        setTimeout(() => {
-          sendEmailDirectly(autoEmail, autoName, bodyText);
-        }, 500);
+        setTimeout(() => sendEmailDirectly(autoEmail, autoName, bodyText), 500);
       }, 100);
     }
   }, []);
 
   async function sendEmailDirectly(email, name, bodyText) {
     try {
-      const response = await fetch('/api/send-email', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      const response = await fetch("/api/send-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           recipientEmail: email,
           senderName: name,
-          subject: subject || 'Something I wanted to share 💛',
+          subject: subject || "Something I wanted to share 💛",
           body: bodyText,
         }),
       });
-      
-      if (response.ok) {
-        setEmailSent(true);
-        setStep(6); // Go to success screen
-      }
+      if (response.ok) { setEmailSent(true); setStep(6); }
     } catch (error) {
-      console.error('Auto-send failed:', error);
+      console.error("Auto-send failed:", error);
     }
   }
 
   function buildBodyForParams(sitId, gifts, link, name) {
-    const situation = SITUATIONS.find(s => s.id === sitId);
+    const situation = SITUATIONS.find((s) => s.id === sitId);
     const phrase = situation?.phrase || "something happened earlier that I want to be honest about";
-    
     let giftText = "";
     if (gifts) {
-      const giftArray = gifts.split(',');
-      const selectedGiftObjs = GIFT_OPTIONS.filter(g => giftArray.includes(g.id));
+      const giftArray = gifts.split(",");
+      const selectedGiftObjs = GIFT_OPTIONS.filter((g) => giftArray.includes(g.id));
       if (selectedGiftObjs.length > 0) {
-        const labels = selectedGiftObjs.map(g => g.label.toLowerCase());
-        let joined;
-        if (labels.length === 1) joined = labels[0];
-        else if (labels.length === 2) joined = `${labels[0]} and ${labels[1]}`;
-        else joined = `${labels.slice(0, -1).join(", ")}, and ${labels[labels.length - 1]}`;
-        giftText = `\n\nHonestly, ${joined} would go a long way right now.\n\n` + 
-          selectedGiftObjs.map(g => `${g.label}: ${g.link}`).join('\n');
+        const labels = selectedGiftObjs.map((g) => g.label.toLowerCase());
+        let joined =
+          labels.length === 1 ? labels[0] :
+          labels.length === 2 ? `${labels[0]} and ${labels[1]}` :
+          `${labels.slice(0, -1).join(", ")}, and ${labels[labels.length - 1]}`;
+        giftText = `\n\nHonestly, ${joined} would go a long way right now.\n\n` +
+          selectedGiftObjs.map((g) => `${g.label}: ${g.link}`).join("\n");
       }
     }
-    
     const linkText = link ? `\n\nHere's something I wanted to share with you: ${link}` : "";
-    
     return `Hey love,\n\nI had a moment today — ${phrase}. I'm not upset forever, I just didn't want to swallow it and pretend it didn't happen.\n\nI'm okay. I just needed a minute, and I took it instead of snapping at you.${giftText}${linkText}\n\n— ${name || "Me"}`;
   }
 
-  // Breathing animation loop, only while on step 2
   useEffect(() => {
     if (step !== 2) return;
     const phase = BREATH_PHASES[phaseIdx];
@@ -231,15 +625,11 @@ export default function ImAWifeApp() {
     return () => clearTimeout(timeoutRef.current);
   }, [step, phaseIdx]);
 
-  // Build the email body once when entering the final step (unless she's edited it)
   useEffect(() => {
-    if (step === 5 && !bodyTouched) {
-      setBody(buildBody());
-    }
+    if (step === 5 && !bodyTouched) setBody(buildBody());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step]);
 
-  // Keep affirmation cycling alive while the user stays on step 3.
   useEffect(() => {
     if (step !== 3) return;
     const interval = setInterval(() => {
@@ -263,24 +653,19 @@ export default function ImAWifeApp() {
     const gifts = selectedGifts();
     if (gifts.length === 0) return null;
     const labels = gifts.map((g) => g.label.toLowerCase());
-    let joined;
-    if (labels.length === 1) joined = labels[0];
-    else if (labels.length === 2) joined = `${labels[0]} and ${labels[1]}`;
-    else joined = `${labels.slice(0, -1).join(", ")}, and ${labels[labels.length - 1]}`;
+    let joined =
+      labels.length === 1 ? labels[0] :
+      labels.length === 2 ? `${labels[0]} and ${labels[1]}` :
+      `${labels.slice(0, -1).join(", ")}, and ${labels[labels.length - 1]}`;
     return `Honestly, ${joined} would go a long way right now.`;
   }
 
   function buildBody() {
-    const opener = senderName ? `Hey love,` : `Hey love,`;
     const gSentence = giftSentence();
-    const linksBlock = selectedGifts()
-      .map((g) => `${g.label}: ${g.link}`)
-      .join("\n");
-
+    const linksBlock = selectedGifts().map((g) => `${g.label}: ${g.link}`).join("\n");
     const pastedLinkText = pastedLink ? `\nHere's something I wanted to share with you: ${pastedLink}` : "";
-
     return [
-      opener,
+      "Hey love,",
       "",
       `I had a moment today — ${situationPhrase()}. I'm not upset forever, I just didn't want to swallow it and pretend it didn't happen.`,
       "",
@@ -310,40 +695,29 @@ export default function ImAWifeApp() {
 
   async function handleSendEmail() {
     if (!recipientEmail) return;
-    
     setIsSendingEmail(true);
     setEmailError("");
-    
     try {
-      const response = await fetch('/api/send-email', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      const response = await fetch("/api/send-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           recipientEmail,
           senderName,
-          subject: subject || 'You Messed Up',
+          subject: subject || "Something I wanted to share 💛",
           body,
         }),
       });
-      
       const data = await response.json();
-      
       if (response.ok) {
         setEmailSent(true);
-        // Generate shareable link
         generateShareableLink();
-        // Show social share after 1 second
-        setTimeout(() => {
-          setShowSocialShare(true);
-        }, 1000);
+        setTimeout(() => setShowSocialShare(true), 1000);
       } else {
-        setEmailError(data.error || 'Failed to send email');
+        setEmailError(data.error || "Failed to send email");
       }
     } catch (error) {
-      setEmailError('Network error. Check the deployed app or local Vercel dev server.');
-      console.error('Email sending error:', error);
+      setEmailError("Network error. Check the deployed app or local Vercel dev server.");
     } finally {
       setIsSendingEmail(false);
     }
@@ -352,18 +726,12 @@ export default function ImAWifeApp() {
   function generateShareableLink() {
     const baseUrl = window.location.origin + window.location.pathname;
     const params = new URLSearchParams({
-      situation: situationId || 'other',
+      situation: situationId || "other",
       email: recipientEmail,
-      name: senderName || 'Your wife',
+      name: senderName || "Your wife",
     });
-    
-    if (giftIds.length > 0) {
-      params.set('gifts', giftIds.join(','));
-    }
-    if (pastedLink) {
-      params.set('link', pastedLink);
-    }
-    
+    if (giftIds.length > 0) params.set("gifts", giftIds.join(","));
+    if (pastedLink) params.set("link", pastedLink);
     const link = `${baseUrl}?${params.toString()}`;
     setShareableLink(link);
     return link;
@@ -371,7 +739,7 @@ export default function ImAWifeApp() {
 
   function copyShareableLink() {
     navigator.clipboard?.writeText(shareableLink).then(() => {
-      alert('Link copied! Share it anywhere to auto-send the message.');
+      alert("Link copied! Share it anywhere to auto-send the message.");
     });
   }
 
@@ -390,26 +758,20 @@ export default function ImAWifeApp() {
 
   function shareToStory(platform) {
     const snippet = generateStorySnippet();
-    
-    if (platform === 'copy') {
-      navigator.clipboard?.writeText(snippet).then(() => {
-        alert('Story snippet copied! Paste it into your story.');
-      });
-    } else if (platform === 'instagram') {
-      // Instagram doesn't have direct story API, copy and guide user
+    if (platform === "copy") {
+      navigator.clipboard?.writeText(snippet).then(() => alert("Story snippet copied! Paste it into your story."));
+    } else if (platform === "instagram") {
       navigator.clipboard?.writeText(snippet);
-      alert('Text copied! Open Instagram and paste into your story. 📸');
-    } else if (platform === 'facebook') {
-      const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.origin)}&quote=${encodeURIComponent(snippet)}`;
-      window.open(fbUrl, '_blank');
-    } else if (platform === 'twitter') {
-      const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(snippet)}`;
-      window.open(twitterUrl, '_blank');
+      alert("Text copied! Open Instagram and paste into your story. 📸");
+    } else if (platform === "facebook") {
+      window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.origin)}&quote=${encodeURIComponent(snippet)}`, "_blank");
+    } else if (platform === "twitter") {
+      window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(snippet)}`, "_blank");
     }
   }
 
   function handleOpenMail() {
-    const params = new URLSearchParams({ subject: subject || 'You Messed Up', body });
+    const params = new URLSearchParams({ subject: subject || "Something I wanted to share 💛", body });
     window.location.href = `mailto:${recipientEmail}?${params.toString()}`;
   }
 
@@ -419,15 +781,10 @@ export default function ImAWifeApp() {
   }
 
   function handlePasteLink(e) {
-    const text = e.clipboardData.getData('text');
+    const text = e.clipboardData.getData("text");
     if (text.match(/https?:\/\//)) {
       setPastedLink(text);
-      // Auto-add to body if user hasn't edited it
-      if (!bodyTouched) {
-        setTimeout(() => {
-          setBody(buildBody());
-        }, 100);
-      }
+      if (!bodyTouched) setTimeout(() => setBody(buildBody()), 100);
     }
   }
 
@@ -435,318 +792,54 @@ export default function ImAWifeApp() {
 
   return (
     <div className="iaw-root">
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,400..500&family=Work+Sans:wght@300;400;500;600&display=swap');
+      <style>{CSS}</style>
 
-        /* Base styles for mobile-first design */
-        .iaw-root {
-          min-height: 100vh;
-          width: 100%;
-          font-family: 'Work Sans', sans-serif;
-          color: #3D2630;
-          background: radial-gradient(circle at 15% 10%, #FBE7DC 0%, #F6DACE 35%, #EFC9BD 70%, #E8B6A8 100%);
-          position: relative;
-          overflow-x: hidden;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          padding-bottom: env(safe-area-inset-bottom);
-        }
-        .iaw-root::before {
-          content: '';
-          position: fixed;
-          inset: 0;
-          pointer-events: none;
-          background-image: radial-gradient(rgba(255,255,255,0.5) 1px, transparent 1px);
-          background-size: 22px 22px;
-          opacity: 0.35;
-        }
-        
-        /* Typography */
-        .iaw-serif { font-family: 'Fraunces', serif; }
-        
-        /* Responsive containers */
-        .iaw-card {
-          background: #FFFCF8;
-          border-radius: 42px;
-          box-shadow: 0 25px 60px -25px rgba(61,38,48,0.4), 0 3px 12px rgba(61,38,48,0.08);
-          width: 100%;
-          margin: 0 auto;
-          transform: rotate(-0.5deg);
-          transition: transform 0.3s ease;
-        }
-        
-        .iaw-card:hover {
-          transform: rotate(0deg) translateY(-2px);
-        }
-        
-        /* Touch-friendly interactive elements */
-        .iaw-chip {
-          border: 2px solid #E2978C55;
-          background: #FFFCF8;
-          transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-          -webkit-tap-highlight-color: transparent;
-          position: relative;
-          overflow: hidden;
-        }
-        .iaw-chip::before {
-          content: '';
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          width: 0;
-          height: 0;
-          border-radius: 50%;
-          background: rgba(201, 107, 94, 0.1);
-          transform: translate(-50%, -50%);
-          transition: width 0.3s, height 0.3s;
-        }
-        .iaw-chip:hover::before, .iaw-chip:active::before {
-          width: 300px;
-          height: 300px;
-        }
-        .iaw-chip:hover, .iaw-chip:active {
-          border-color: #C96B5E;
-          transform: translateY(-2px) scale(1.02);
-          box-shadow: 0 8px 16px -8px rgba(201,107,94,0.3);
-        }
-        .iaw-chip.selected {
-          background: linear-gradient(135deg, #C96B5E 0%, #E2978C 100%);
-          border-color: #C96B5E;
-          color: #FFF8F0;
-          transform: scale(1.05);
-          box-shadow: 0 12px 24px -10px rgba(201,107,94,0.5);
-        }
-        
-        /* Buttons with touch-friendly sizing */
-        .iaw-btn-primary {
-          background: linear-gradient(135deg, #C96B5E 0%, #E2978C 100%);
-          color: #FFF8F0;
-          transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-          min-height: 48px;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          -webkit-tap-highlight-color: transparent;
-          border: none;
-          position: relative;
-          overflow: hidden;
-        }
-        .iaw-btn-primary::after {
-          content: '';
-          position: absolute;
-          inset: 0;
-          background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 100%);
-          opacity: 0;
-          transition: opacity 0.3s;
-        }
-        .iaw-btn-primary:hover::after, .iaw-btn-primary:active::after {
-          opacity: 1;
-        }
-        .iaw-btn-primary:hover, .iaw-btn-primary:active {
-          transform: translateY(-2px) scale(1.05);
-          box-shadow: 0 15px 32px -12px rgba(201,107,94,0.6);
-        }
-        .iaw-btn-primary:disabled { 
-          opacity: 0.4; 
-          transform: none; 
-          box-shadow: none; 
-          cursor: not-allowed; 
-        }
-        
-        .iaw-btn-ghost {
-          background: transparent;
-          color: #6B4750;
-          border: 2px solid #6B475033;
-          min-height: 48px;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          -webkit-tap-highlight-color: transparent;
-          transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-        .iaw-btn-ghost:hover, .iaw-btn-ghost:active {
-          border-color: #6B4750;
-          transform: translateY(-1px) scale(1.02);
-          background: rgba(107, 71, 80, 0.05);
-        }
-        
-        /* Progress indicators */
-        .iaw-dot { 
-          width: 7px; 
-          height: 7px; 
-          border-radius: 50%; 
-          background: #6B475033; 
-        }
-        .iaw-dot.active { 
-          background: #C96B5E; 
-          width: 20px; 
-          border-radius: 4px; 
-        }
-        
-        /* Breathing animation */
-        .iaw-breath-circle {
-          border-radius: 50%;
-          background: radial-gradient(circle at 35% 30%, #F6DACE, #E2978C 65%, #C96B5E 100%);
-          box-shadow: 0 0 0 14px #E2978C22, 0 30px 60px -20px rgba(201,107,94,0.5);
-          transition: transform ease-in-out;
-          width: 150px;
-          height: 150px;
-        }
-        
-        @media (min-width: 768px) {
-          .iaw-breath-circle {
-            width: 180px;
-            height: 180px;
-          }
-        }
-        
-        /* Animations */
-        .iaw-fade-in { 
-          animation: iawFadeIn 0.5s ease both; 
-        }
-        @keyframes iawFadeIn {
-          from { opacity: 0; transform: translateY(8px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        
-        /* Background elements */
-        .iaw-flower-bg {
-          position: absolute;
-          opacity: 0.12;
-          color: #C96B5E;
-          display: none;
-        }
-        
-        @media (min-width: 768px) {
-          .iaw-flower-bg {
-            display: block;
-          }
-        }
-        
-        /* Form elements optimized for mobile */
-        textarea.iaw-textarea {
-          font-family: 'Work Sans', sans-serif;
-          width: 100%;
-          border: 1.5px solid #6B475033;
-          border-radius: 16px;
-          padding: 16px;
-          background: #FFFEFB;
-          resize: vertical;
-          line-height: 1.6;
-          font-size: 16px; /* Prevents iOS zoom on focus */
-          min-height: 120px;
-        }
-        
-        textarea.iaw-textarea:focus, 
-        input.iaw-input:focus { 
-          outline: none; 
-          border-color: #C96B5E; 
-        }
-        
-        input.iaw-input {
-          font-family: 'Work Sans', sans-serif;
-          width: 100%;
-          border: 1.5px solid #6B475033;
-          border-radius: 14px;
-          padding: 14px 16px;
-          background: #FFFEFB;
-          font-size: 16px; /* Prevents iOS zoom on focus */
-          min-height: 48px;
-        }
-        
-        /* Mobile-safe grid layouts */
-        @media (max-width: 640px) {
-          .grid-cols-2 {
-            grid-template-columns: 1fr;
-          }
-          
-          .gap-3 {
-            gap: 2rem;
-          }
-          
-          .p-8 {
-            padding: 1.5rem;
-          }
-          
-          .p-10 {
-            padding: 2rem;
-          }
-          
-          .text-4xl {
-            font-size: 2rem;
-            line-height: 2.5rem;
-          }
-          
-          .text-5xl {
-            font-size: 2.5rem;
-            line-height: 3rem;
-          }
-        }
-        
-        /* Safe area handling for notched phones */
-        @supports (padding: max(0px)) {
-          .iaw-root {
-            padding-left: max(1rem, env(safe-area-inset-left));
-            padding-right: max(1rem, env(safe-area-inset-right));
-          }
-        }
-        
-        /* Loading spinner animation */
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-        
-        .animate-spin {
-          animation: spin 1s linear infinite;
-        }
-      `}</style>
-
-      <Flower2 className="iaw-flower-bg" size={180} style={{ top: -30, right: -40, transform: "rotate(15deg)" }} />
-      <Flower2 className="iaw-flower-bg" size={120} style={{ bottom: 40, left: -30, transform: "rotate(-20deg)" }} />
-
-      {/* Header */}
-      <div className="w-full max-w-2xl px-6 pt-10 pb-4 flex flex-col items-center relative z-10">
-        <div className="flex items-center gap-2 mb-2">
-          <Heart size={18} color="#C96B5E" fill="#C96B5E" />
-          <span className="text-xs tracking-[0.2em] uppercase text-[#6B4750]">I'm a Wife</span>
-        </div>
-        {step > 0 && (
-          <div className="flex gap-2 mt-3">
-            {STEP_LABELS.map((_, i) => (
-              <div key={i} className={`iaw-dot ${i + 1 === step ? "active" : ""}`} />
-            ))}
+      {/* ── Header ── */}
+      <div className="iaw-wrap">
+        <div className="iaw-header">
+          <div className="iaw-brand">
+            <Heart size={16} color="#C96B5E" fill="#C96B5E" />
+            <span className="iaw-brand-label">I'm a Wife</span>
           </div>
-        )}
+          {step > 0 && (
+            <div className="iaw-steps">
+              {STEP_LABELS.map((_, i) => (
+                <div key={i} className={`iaw-step-dot${i + 1 === step ? " active" : ""}`} />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Body */}
-      <div className="w-full max-w-2xl px-6 pb-16 flex-1 flex flex-col items-center relative z-10">
+      {/* ── Steps ── */}
+      <div className="iaw-wrap">
+
+        {/* Step 0 — Landing */}
         {step === 0 && (
-          <div className="iaw-card iaw-fade-in w-full p-10 md:p-14 flex flex-col items-center text-center mt-6">
-            <h1 className="iaw-serif text-4xl md:text-5xl leading-tight mb-4" style={{ color: "#3D2630" }}>
+          <div className="iaw-card iaw-fade" style={{ textAlign: "center", padding: "44px 32px" }}>
+            <h1 className="iaw-title iaw-serif">
               A soft place to land<br />before you press send.
             </h1>
-            <p className="text-[#6B4750] max-w-md mb-8 leading-relaxed">
+            <p className="iaw-sub" style={{ maxWidth: 340, margin: "0 auto 32px" }}>
               Name what happened, breathe for a minute, remember you're not the problem —
               then tell him about it like a grown woman instead of a slammed door.
             </p>
-            <button className="iaw-btn-primary rounded-full px-8 py-3.5 flex items-center gap-2 font-medium" onClick={() => setStep(1)}>
-              Begin <ArrowRight size={18} />
+            <button className="iaw-btn iaw-btn-primary" onClick={() => setStep(1)}>
+              Begin <ArrowRight size={16} />
             </button>
           </div>
         )}
 
+        {/* Step 1 — What happened */}
         {step === 1 && (
-          <div className="iaw-card iaw-fade-in w-full p-8 md:p-10 mt-4">
-            <h2 className="iaw-serif text-2xl md:text-3xl mb-2">What happened?</h2>
-            <p className="text-[#6B4750] mb-6 text-sm">Pick what's closest — you can say more in your own words after.</p>
-            <div className="grid grid-cols-1 gap-2.5">
+          <div className="iaw-card iaw-fade">
+            <h2 className="iaw-heading iaw-serif">What happened?</h2>
+            <p className="iaw-sub">Pick what's closest — you can say more in your own words after.</p>
+            <div className="iaw-chip-list">
               {SITUATIONS.map((s) => (
                 <button
                   key={s.id}
-                  className={`iaw-chip rounded-2xl px-5 py-3.5 text-left text-sm font-medium ${situationId === s.id ? "selected" : ""}`}
+                  className={`iaw-chip${situationId === s.id ? " selected" : ""}`}
                   onClick={() => setSituationId(s.id)}
                 >
                   {s.label}
@@ -755,25 +848,22 @@ export default function ImAWifeApp() {
             </div>
             {situationId === "other" && (
               <textarea
-                className="iaw-textarea mt-4 text-sm"
+                className="iaw-textarea"
                 rows={3}
                 placeholder="Tell it your way..."
                 value={customText}
                 onChange={(e) => setCustomText(e.target.value)}
+                style={{ marginBottom: 8, fontSize: 15 }}
               />
             )}
-            <div className="flex justify-between mt-8">
-              <button className="iaw-btn-ghost rounded-full px-5 py-2.5 text-sm flex items-center gap-1.5" onClick={() => setStep(0)}>
+            <div className="iaw-nav">
+              <button className="iaw-btn iaw-btn-ghost" onClick={() => setStep(0)}>
                 <ArrowLeft size={15} /> Back
               </button>
               <button
-                className="iaw-btn-primary rounded-full px-7 py-2.5 text-sm font-medium flex items-center gap-1.5"
+                className="iaw-btn iaw-btn-primary"
                 disabled={!canContinueStep1}
-                onClick={() => {
-                  setStep(2);
-                  setPhaseIdx(0);
-                  setCycles(0);
-                }}
+                onClick={() => { setStep(2); setPhaseIdx(0); setCycles(0); }}
               >
                 Continue <ArrowRight size={15} />
               </button>
@@ -781,109 +871,88 @@ export default function ImAWifeApp() {
           </div>
         )}
 
+        {/* Step 2 — Breathe */}
         {step === 2 && (
-          <div className="iaw-card iaw-fade-in w-full p-8 md:p-10 mt-4 flex flex-col items-center text-center">
-            <h2 className="iaw-serif text-2xl md:text-3xl mb-2">Just breathe for a second.</h2>
-            <p className="text-[#6B4750] mb-8 text-sm">No rush. Stay as long as you want.</p>
-            <div
-              className="iaw-breath-circle flex items-center justify-center mb-8"
-              style={{
-                width: 180,
-                height: 180,
-                transform: `scale(${BREATH_PHASES[phaseIdx].scale})`,
-                transitionDuration: `${BREATH_PHASES[phaseIdx].ms}ms`,
-              }}
-            >
-              <Wind color="#FFF8F0" size={32} />
-            </div>
-            <p className="iaw-serif text-xl mb-1" style={{ color: "#C96B5E" }}>{BREATH_PHASES[phaseIdx].name}</p>
-            <p className="text-xs text-[#6B475099] mb-8">{cycles} full cycle{cycles === 1 ? "" : "s"} done</p>
-            <div className="flex justify-between w-full">
-              <button className="iaw-btn-ghost rounded-full px-5 py-2.5 text-sm flex items-center gap-1.5" onClick={() => setStep(1)}>
-                <ArrowLeft size={15} /> Back
-              </button>
-              <button
-                className="iaw-btn-primary rounded-full px-7 py-2.5 text-sm font-medium flex items-center gap-1.5"
-                onClick={() => {
-                  setStep(3);
-                  setAffIndex(0);
+          <div className="iaw-card iaw-fade" style={{ textAlign: "center" }}>
+            <h2 className="iaw-heading iaw-serif">Just breathe for a second.</h2>
+            <p className="iaw-sub">No rush. Stay as long as you want.</p>
+            <div className="iaw-breath-wrap">
+              <div
+                className="iaw-breath-circle"
+                style={{
+                  transform: `scale(${BREATH_PHASES[phaseIdx].scale})`,
+                  transitionDuration: `${BREATH_PHASES[phaseIdx].ms}ms`,
                 }}
               >
+                <Wind color="rgba(255,255,255,0.9)" size={28} />
+              </div>
+              <p className="iaw-serif" style={{ fontSize: 20, color: "#C96B5E", marginBottom: 6 }}>
+                {BREATH_PHASES[phaseIdx].name}
+              </p>
+              <p style={{ fontSize: 12, color: "#9B708088" }}>
+                {cycles} full cycle{cycles === 1 ? "" : "s"} done
+              </p>
+            </div>
+            <div className="iaw-nav">
+              <button className="iaw-btn iaw-btn-ghost" onClick={() => setStep(1)}>
+                <ArrowLeft size={15} /> Back
+              </button>
+              <button className="iaw-btn iaw-btn-primary" onClick={() => { setStep(3); setAffIndex(0); }}>
                 I'm ready <ArrowRight size={15} />
               </button>
             </div>
           </div>
         )}
 
+        {/* Step 3 — Affirmations */}
         {step === 3 && (
-          <div className="iaw-card iaw-fade-in w-full p-8 md:p-10 mt-4 flex flex-col items-center text-center">
-            <h2 className="iaw-serif text-2xl md:text-3xl mb-6">A few true things.</h2>
-            <div className="w-full max-w-sm mb-5">
-              <div className="h-1.5 rounded-full bg-[#E2978C22] overflow-hidden">
-                <div
-                  className="h-full rounded-full"
-                  style={{
-                    width: "100%",
-                    background: "linear-gradient(90deg, #E2978C, #C96B5E)",
-                    animation: "iawAffirmationSweep 2s linear infinite",
-                    transformOrigin: "left center",
-                  }}
-                />
-              </div>
-              <p className="text-[11px] uppercase tracking-[0.18em] text-[#6B475099] mt-2">
-                Auto-rotates every 2 seconds
-              </p>
+          <div className="iaw-card iaw-fade" style={{ textAlign: "center" }}>
+            <h2 className="iaw-heading iaw-serif">A few true things.</h2>
+            <div className="iaw-progress-bar">
+              <div className="iaw-progress-fill" />
             </div>
-            <div
-              className="rounded-3xl px-8 py-10 mb-6 w-full flex items-center justify-center"
-              style={{ background: "linear-gradient(135deg, #F6DACE, #EFC9BD)", minHeight: 160 }}
-            >
-              <p className="iaw-serif text-xl md:text-2xl leading-snug text-center max-w-md" style={{ color: "#3D2630" }}>
-                {AFFIRMATIONS[affIndex]}
-              </p>
+            <p className="iaw-aff-counter">{affIndex + 1} of {AFFIRMATIONS.length}</p>
+            <div className="iaw-affirmation-box">
+              <p className="iaw-affirmation-text">{AFFIRMATIONS[affIndex]}</p>
             </div>
-            <div className="flex gap-1.5 mb-8">
-              {AFFIRMATIONS.map((_, i) => (
-                <div key={i} className={`iaw-dot ${i === affIndex ? "active" : ""}`} />
-              ))}
-            </div>
-            <div className="flex items-center gap-3 mb-8">
+            <div className="iaw-aff-controls">
               <button
-                className="iaw-btn-ghost rounded-full px-5 py-2 text-sm"
+                className="iaw-btn iaw-btn-ghost iaw-btn-sm"
                 onClick={() => setAffIndex((i) => (i - 1 + AFFIRMATIONS.length) % AFFIRMATIONS.length)}
               >
                 Previous
               </button>
               <button
-                className="iaw-btn-ghost rounded-full px-5 py-2 text-sm"
+                className="iaw-btn iaw-btn-ghost iaw-btn-sm"
                 onClick={() => setAffIndex((i) => (i + 1) % AFFIRMATIONS.length)}
               >
                 Another one
               </button>
             </div>
-            <div className="flex justify-between w-full">
-              <button className="iaw-btn-ghost rounded-full px-5 py-2.5 text-sm flex items-center gap-1.5" onClick={() => setStep(2)}>
+            <div className="iaw-nav">
+              <button className="iaw-btn iaw-btn-ghost" onClick={() => setStep(2)}>
                 <ArrowLeft size={15} /> Back
               </button>
-              <button className="iaw-btn-primary rounded-full px-7 py-2.5 text-sm font-medium flex items-center gap-1.5" onClick={() => setStep(4)}>
+              <button className="iaw-btn iaw-btn-primary" onClick={() => setStep(4)}>
                 I feel a little better <ArrowRight size={15} />
               </button>
             </div>
           </div>
         )}
 
+        {/* Step 4 — Gifts */}
         {step === 4 && (
-          <div className="iaw-card iaw-fade-in w-full p-6 md:p-10 mt-4">
-            <h2 className="iaw-serif text-2xl md:text-3xl mb-2">A little something would help.</h2>
-            <p className="text-[#6B4750] mb-6 text-sm">Pick whatever sounds good. He's buying.</p>
-            <div className="grid grid-cols-2 gap-3">
+          <div className="iaw-card iaw-fade">
+            <h2 className="iaw-heading iaw-serif">A little something would help.</h2>
+            <p className="iaw-sub">Pick whatever sounds good. He's buying.</p>
+            <div className="iaw-gift-grid">
               {GIFT_OPTIONS.map((g) => {
                 const Icon = g.icon;
                 const sel = giftIds.includes(g.id);
                 return (
                   <button
                     key={g.id}
-                    className={`iaw-chip rounded-2xl px-4 py-5 flex flex-col items-center gap-2 text-sm font-medium text-center ${sel ? "selected" : ""}`}
+                    className={`iaw-gift-chip${sel ? " selected" : ""}`}
                     onClick={() => toggleGift(g.id)}
                   >
                     <Icon size={22} />
@@ -892,196 +961,177 @@ export default function ImAWifeApp() {
                 );
               })}
             </div>
-            <div className="flex justify-between mt-8">
-              <button className="iaw-btn-ghost rounded-full px-5 py-2.5 text-sm flex items-center gap-1.5" onClick={() => setStep(3)}>
+            <div className="iaw-nav">
+              <button className="iaw-btn iaw-btn-ghost" onClick={() => setStep(3)}>
                 <ArrowLeft size={15} /> Back
               </button>
-              <button className="iaw-btn-primary rounded-full px-7 py-2.5 text-sm font-medium flex items-center gap-1.5" onClick={() => setStep(5)}>
+              <button className="iaw-btn iaw-btn-primary" onClick={() => setStep(5)}>
                 Continue <ArrowRight size={15} />
               </button>
             </div>
           </div>
         )}
 
+        {/* Step 5 — Tell him */}
         {step === 5 && (
-          <div className="iaw-card iaw-fade-in w-full p-8 md:p-10 mt-4">
-            <h2 className="iaw-serif text-2xl md:text-3xl mb-2">Tell him, gently.</h2>
-            <p className="text-[#6B4750] mb-6 text-sm">Edit anything you want — it's your voice, not a script.</p>
+          <div className="iaw-card iaw-fade">
+            <h2 className="iaw-heading iaw-serif">Tell him, gently.</h2>
+            <p className="iaw-sub">Edit anything you want — it's your voice, not a script.</p>
 
-            <div className="rounded-[30px] border border-[#E2978C33] bg-[#FFF8F0] p-4 md:p-5 mb-5 shadow-[0_14px_30px_-26px_rgba(61,38,48,0.28)]">
-              <div className="flex items-center gap-2 mb-3">
-                <LinkIcon size={16} className="text-[#C96B5E]" />
-                <label className="text-sm font-medium text-[#3D2630]">Share one useful link</label>
-              </div>
-              <div className="flex flex-col sm:flex-row gap-2">
+            {/* Link */}
+            <div className="iaw-panel">
+              <label className="iaw-field-label">Share a link (optional)</label>
+              <div className="iaw-row">
                 <input
-                  className="iaw-input text-sm flex-1"
+                  className="iaw-input"
                   type="text"
-                  placeholder="Paste any link here (product, article, video, etc.)"
+                  placeholder="Paste any link here…"
                   value={pastedLink}
                   onChange={(e) => setPastedLink(e.target.value)}
                   onPaste={handlePasteLink}
                 />
-                <button
-                  className="iaw-btn-ghost rounded-full px-4 py-2.5 text-sm whitespace-nowrap"
-                  onClick={() => {
-                    setPastedLink("");
-                    if (!bodyTouched) {
-                      setBody(buildBody());
-                    }
-                  }}
-                >
-                  Clear Link
-                </button>
+                {pastedLink && (
+                  <button
+                    className="iaw-btn iaw-btn-ghost iaw-btn-sm"
+                    style={{ whiteSpace: "nowrap" }}
+                    onClick={() => { setPastedLink(""); if (!bodyTouched) setBody(buildBody()); }}
+                  >
+                    Clear
+                  </button>
+                )}
               </div>
               {pastedLink && (
-                <p className="text-xs text-[#6B475080] mt-2">
-                  ✓ Link added. It will flow into the note automatically.
-                </p>
+                <p style={{ fontSize: 12, color: "#9B7080", marginTop: 7 }}>✓ Added to your note</p>
               )}
             </div>
 
-            <div className="rounded-[30px] border border-[#E2978C33] bg-[#FFFEFB] p-4 md:p-5 mb-5 shadow-[0_14px_30px_-26px_rgba(61,38,48,0.22)]">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+            {/* Email fields */}
+            <div className="iaw-panel">
+              <div className="iaw-email-grid">
                 <div>
-                  <label className="text-xs uppercase tracking-wide text-[#6B475099] mb-1.5 block">His email</label>
-                  <input className="iaw-input text-sm" type="email" placeholder="him@email.com" value={recipientEmail} onChange={(e) => setRecipientEmail(e.target.value)} />
+                  <label className="iaw-field-label">His email</label>
+                  <input
+                    className="iaw-input"
+                    type="email"
+                    placeholder="him@email.com"
+                    value={recipientEmail}
+                    onChange={(e) => setRecipientEmail(e.target.value)}
+                  />
                 </div>
                 <div>
-                  <label className="text-xs uppercase tracking-wide text-[#6B475099] mb-1.5 block">Your name</label>
-                  <input className="iaw-input text-sm" type="text" placeholder="Your name" value={senderName} onChange={(e) => setSenderName(e.target.value)} />
+                  <label className="iaw-field-label">Your name</label>
+                  <input
+                    className="iaw-input"
+                    type="text"
+                    placeholder="Your name"
+                    value={senderName}
+                    onChange={(e) => setSenderName(e.target.value)}
+                  />
                 </div>
               </div>
-
-              <label className="text-xs uppercase tracking-wide text-[#6B475099] mb-1.5 block">Subject</label>
-              <input className="iaw-input text-sm mb-2" type="text" value={subject} onChange={(e) => setSubject(e.target.value)} />
-            </div>
-
-            <div className="rounded-[30px] border border-[#E2978C33] bg-[#FFFDFC] p-4 md:p-5 mb-6 shadow-[0_14px_30px_-26px_rgba(61,38,48,0.22)]">
-              <div className="flex items-center justify-between mb-2">
-                <label className="text-xs uppercase tracking-wide text-[#6B475099] block">Message</label>
-                <button className="text-xs flex items-center gap-1 text-[#C96B5E] hover:underline" onClick={regenerate}>
-                  <RefreshCcw size={12} /> Rewrite for me
-                </button>
-              </div>
-              <textarea
-                className="iaw-textarea text-sm"
-                rows={10}
-                value={body}
-                onChange={(e) => {
-                  setBody(e.target.value);
-                  setBodyTouched(true);
-                }}
+              <label className="iaw-field-label">Subject</label>
+              <input
+                className="iaw-input"
+                type="text"
+                value={subject}
+                onChange={(e) => setSubject(e.target.value)}
               />
             </div>
 
-            {/* Status Messages */}
+            {/* Message */}
+            <div className="iaw-panel">
+              <div className="iaw-row-between" style={{ marginBottom: 10 }}>
+                <label className="iaw-field-label" style={{ margin: 0 }}>Message</label>
+                <button
+                  style={{ fontSize: 12, color: "#C96B5E", background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 4, fontFamily: "inherit" }}
+                  onClick={regenerate}
+                >
+                  <RefreshCcw size={12} /> Rewrite
+                </button>
+              </div>
+              <textarea
+                className="iaw-textarea"
+                rows={9}
+                value={body}
+                onChange={(e) => { setBody(e.target.value); setBodyTouched(true); }}
+              />
+            </div>
+
+            {/* Status */}
             {emailError && (
-              <div className="mb-4 p-4 rounded-[24px] bg-red-50 border border-red-200">
-                <p className="text-sm text-red-700">{emailError}</p>
-                <p className="text-xs text-red-600 mt-1">Make sure the app endpoint is reachable on this origin.</p>
-              </div>
+              <div className="iaw-status-err">{emailError}</div>
             )}
-            
             {emailSent && (
-              <div className="mb-4 p-4 rounded-[24px] bg-green-50 border border-green-200">
-                <p className="text-sm text-green-700 flex items-center gap-2">
-                  <Check size={16} /> Email sent successfully via SMTP!
-                </p>
+              <div className="iaw-status-ok">
+                <Check size={15} /> Email sent successfully!
               </div>
             )}
 
-            {/* Social Sharing Component */}
+            {/* Social share — only after email sent */}
             {showSocialShare && emailSent && (
-              <div className="iaw-card mb-6 p-6 bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-200">
-                <div className="flex items-center gap-2 mb-3">
-                  <Share2 size={20} className="text-purple-600" />
-                  <h3 className="iaw-serif text-xl text-purple-900">Share your moment</h3>
+              <div className="iaw-panel">
+                <div className="iaw-share-title">
+                  <Share2 size={16} color="#C96B5E" />
+                  <span className="iaw-serif" style={{ fontSize: 15, color: "#3D2630" }}>Inspire someone else to speak up</span>
                 </div>
-                <p className="text-sm text-purple-700 mb-4">
-                  Inspire other women to speak up. Share a snippet to your story!
-                </p>
-                
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
-                  <button
-                    className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-white border-2 border-purple-200 hover:border-purple-400 transition-all"
-                    onClick={() => shareToStory('instagram')}
-                  >
-                    <Camera size={24} className="text-pink-600" />
-                    <span className="text-xs font-medium text-purple-900">Instagram</span>
+                <p style={{ fontSize: 13, color: "#7A5560", marginBottom: 14 }}>Share a moment to your story.</p>
+                <div className="iaw-share-grid">
+                  <button className="iaw-share-btn" onClick={() => shareToStory("instagram")}>
+                    <Camera size={20} color="#C96B5E" /><span>Instagram</span>
                   </button>
-                  
-                  <button
-                    className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-white border-2 border-purple-200 hover:border-purple-400 transition-all"
-                    onClick={() => shareToStory('facebook')}
-                  >
-                    <Users size={24} className="text-blue-600" />
-                    <span className="text-xs font-medium text-purple-900">Facebook</span>
+                  <button className="iaw-share-btn" onClick={() => shareToStory("facebook")}>
+                    <Users size={20} color="#5A7BA6" /><span>Facebook</span>
                   </button>
-                  
-                  <button
-                    className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-white border-2 border-purple-200 hover:border-purple-400 transition-all"
-                    onClick={() => shareToStory('twitter')}
-                  >
-                    <MessageCircle size={24} className="text-sky-500" />
-                    <span className="text-xs font-medium text-purple-900">Twitter</span>
+                  <button className="iaw-share-btn" onClick={() => shareToStory("twitter")}>
+                    <MessageCircle size={20} color="#5A7BA6" /><span>Twitter</span>
                   </button>
-                  
-                  <button
-                    className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-white border-2 border-purple-200 hover:border-purple-400 transition-all"
-                    onClick={() => shareToStory('copy')}
-                  >
-                    <Copy size={24} className="text-purple-600" />
-                    <span className="text-xs font-medium text-purple-900">Copy Text</span>
+                  <button className="iaw-share-btn" onClick={() => shareToStory("copy")}>
+                    <Copy size={20} color="#C96B5E" /><span>Copy Text</span>
                   </button>
                 </div>
-
-                <div className="bg-white/60 rounded-xl p-3 border border-purple-200">
-                  <p className="text-xs text-purple-600 font-medium mb-2">Or share this auto-send link:</p>
-                  <div className="flex gap-2">
+                {shareableLink && (
+                  <div className="iaw-share-link-row">
                     <input
                       type="text"
                       readOnly
                       value={shareableLink}
-                      className="flex-1 text-xs px-3 py-2 bg-white rounded-lg border border-purple-200"
+                      className="iaw-input"
+                      style={{ fontSize: 12, color: "#7A5560" }}
                     />
-                    <button
-                      onClick={copyShareableLink}
-                      className="px-4 py-2 bg-purple-600 text-white rounded-lg text-xs font-medium hover:bg-purple-700 transition-all flex items-center gap-1"
-                    >
-                      <LinkIcon size={14} /> Copy
+                    <button className="iaw-btn iaw-btn-primary iaw-btn-sm" onClick={copyShareableLink}>
+                      <LinkIcon size={13} /> Copy
                     </button>
                   </div>
-                  <p className="text-[10px] text-purple-500 mt-2">
-                    Anyone who clicks this link will auto-send the message to the email you specified!
-                  </p>
-                </div>
+                )}
               </div>
             )}
 
-            <div className="flex flex-col-reverse md:flex-row gap-3 md:justify-between md:items-center">
-              <button className="iaw-btn-ghost rounded-full px-5 py-2.5 text-sm flex items-center gap-1.5 justify-center" onClick={() => setStep(4)}>
-                <ArrowLeft size={15} /> Back
-              </button>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full md:w-auto">
-                <button className="iaw-btn-ghost rounded-full px-5 py-2.5 text-sm flex items-center justify-center gap-1.5" onClick={handleCopy}>
-                  {copied ? <Check size={15} /> : <Copy size={15} />} {copied ? "Copied" : "Copy"}
+            {/* Send actions */}
+            <div className="iaw-send-actions">
+              <div className="iaw-send-row">
+                <button className="iaw-btn iaw-btn-ghost" onClick={() => setStep(4)}>
+                  <ArrowLeft size={15} /> Back
                 </button>
+                <button className="iaw-btn iaw-btn-ghost" onClick={handleCopy}>
+                  {copied ? <Check size={15} /> : <Copy size={15} />}
+                  {copied ? "Copied!" : "Copy"}
+                </button>
+              </div>
+              <div className="iaw-send-row">
                 <button
-                  className="iaw-btn-primary rounded-full px-7 py-2.5 text-sm font-medium flex items-center justify-center gap-1.5"
+                  className="iaw-btn iaw-btn-primary"
                   disabled={!recipientEmail || isSendingEmail}
                   onClick={handleOpenMail}
                 >
-                  <Mail size={15} /> Open Mail App
+                  <Mail size={15} /> Open Mail
                 </button>
                 <button
-                  className="iaw-btn-primary rounded-full px-7 py-2.5 text-sm font-medium flex items-center justify-center gap-1.5"
-                  style={{ background: '#4A6FA5' }}
+                  className="iaw-btn iaw-btn-blue"
                   disabled={!recipientEmail || isSendingEmail}
                   onClick={handleSendEmail}
                 >
-                  {isSendingEmail ? <Loader size={15} className="animate-spin" /> : <Send size={15} />} 
-                  {isSendingEmail ? 'Sending...' : 'Send via SMTP'}
+                  {isSendingEmail ? <Loader size={15} className="iaw-spin" /> : <Send size={15} />}
+                  {isSendingEmail ? "Sending…" : "Send via SMTP"}
                 </button>
               </div>
             </div>
@@ -1089,16 +1139,10 @@ export default function ImAWifeApp() {
         )}
       </div>
 
-      <p className="text-[11px] text-[#6B475080] text-center px-8 pb-8 max-w-md relative z-10">
+      <p className="iaw-footer">
         Made with care, for the moments that don't need a fight to be heard.<br />
         Not a substitute for actually talking to him — just a softer way in.
       </p>
-      <style>{`
-        @keyframes iawAffirmationSweep {
-          from { transform: scaleX(0); }
-          to { transform: scaleX(1); }
-        }
-      `}</style>
     </div>
   );
 }
