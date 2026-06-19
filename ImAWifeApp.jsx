@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import * as THREE from "three";
 import {
   Heart,
   Flower2,
@@ -7,15 +8,12 @@ import {
   Gift,
   Cookie,
   Mail,
-  Wind,
   ArrowRight,
   ArrowLeft,
   Check,
   Copy,
   RefreshCcw,
   Link as LinkIcon,
-  Send,
-  Loader,
   Share2,
   Camera,
   Users,
@@ -339,24 +337,6 @@ const CSS = `
     margin-bottom: 14px;
   }
 
-  /* ── Breathing circle ── */
-  .iaw-breath-wrap {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin: 8px 0 28px;
-  }
-  .iaw-breath-circle {
-    width: 154px;
-    height: 154px;
-    border-radius: 50%;
-    background: radial-gradient(circle at 38% 32%, #F6DACE, #C96B5E 90%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: transform ease-in-out;
-    margin-bottom: 20px;
-  }
 
   /* ── Affirmation ── */
   .iaw-affirmation-box {
@@ -517,6 +497,185 @@ const CSS = `
   }
 `;
 
+/* ─────────────────────────────────────────────────────────────
+   Three.js breathing orb
+   ───────────────────────────────────────────────────────────── */
+function BreathingOrb({ phaseIdx, phases }) {
+  const mountRef = useRef(null);
+  const stateRef = useRef({ phaseIdx, phases });
+
+  useEffect(() => {
+    stateRef.current = { phaseIdx, phases };
+  }, [phaseIdx, phases]);
+
+  useEffect(() => {
+    const el = mountRef.current;
+    if (!el) return;
+
+    const SIZE = el.clientWidth;
+
+    // ── Renderer ──────────────────────────────────────────────
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(SIZE, SIZE);
+    renderer.setClearColor(0x000000, 0);
+    el.appendChild(renderer.domElement);
+
+    // ── Scene / camera ────────────────────────────────────────
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 100);
+    camera.position.z = 3.2;
+
+    // ── Main orb ──────────────────────────────────────────────
+    const geo = new THREE.SphereGeometry(1, 56, 56);
+    const origPos = new Float32Array(geo.attributes.position.array);
+
+    const mat = new THREE.MeshPhongMaterial({
+      color:            new THREE.Color("#D0735F"),
+      emissive:         new THREE.Color("#C96B5E"),
+      emissiveIntensity: 0.18,
+      shininess:        90,
+      transparent:      true,
+      opacity:          0.93,
+    });
+    const orb = new THREE.Mesh(geo, mat);
+    scene.add(orb);
+
+    // ── Halo layers ───────────────────────────────────────────
+    const makeHalo = (radius, color, opacity) => {
+      const m = new THREE.Mesh(
+        new THREE.SphereGeometry(radius, 24, 24),
+        new THREE.MeshBasicMaterial({ color: new THREE.Color(color), transparent: true, opacity, side: THREE.BackSide })
+      );
+      scene.add(m);
+      return m;
+    };
+    const halo1 = makeHalo(1.14, "#E2978C", 0.10);
+    const halo2 = makeHalo(1.30, "#F6DACE", 0.05);
+    const halo3 = makeHalo(1.50, "#FEF5EF", 0.03);
+
+    // ── Particles ─────────────────────────────────────────────
+    const ptCount = 80;
+    const ptGeo   = new THREE.BufferGeometry();
+    const ptPos   = new Float32Array(ptCount * 3);
+    const ptSpeeds = [];
+    for (let i = 0; i < ptCount; i++) {
+      const theta = Math.random() * Math.PI * 2;
+      const phi   = Math.acos(2 * Math.random() - 1);
+      const r     = 1.2 + Math.random() * 0.6;
+      ptPos[i * 3]     = r * Math.sin(phi) * Math.cos(theta);
+      ptPos[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
+      ptPos[i * 3 + 2] = r * Math.cos(phi);
+      ptSpeeds.push({ theta, phi, r, speed: 0.003 + Math.random() * 0.005, phase: Math.random() * Math.PI * 2 });
+    }
+    ptGeo.setAttribute("position", new THREE.BufferAttribute(ptPos, 3));
+    const ptMat = new THREE.PointsMaterial({ color: "#E2978C", size: 0.035, transparent: true, opacity: 0.55 });
+    const particles = new THREE.Points(ptGeo, ptMat);
+    scene.add(particles);
+
+    // ── Lighting ──────────────────────────────────────────────
+    const keyLight = new THREE.DirectionalLight(0xfff0e8, 1.4);
+    keyLight.position.set(3, 4, 5);
+    scene.add(keyLight);
+    const fillLight = new THREE.DirectionalLight(0xf6dace, 0.7);
+    fillLight.position.set(-3, -1, 2);
+    scene.add(fillLight);
+    scene.add(new THREE.AmbientLight(0xfce8dc, 0.6));
+
+    // ── Animation loop ────────────────────────────────────────
+    let currentScale = 1.0;
+    let t = 0;
+    let lastTime = performance.now();
+    let rafId;
+
+    function animate(now) {
+      rafId = requestAnimationFrame(animate);
+      const dt = Math.min(now - lastTime, 50);
+      lastTime = now;
+      t += dt * 0.001;
+
+      const { phaseIdx: pi, phases } = stateRef.current;
+      const targetScale = phases[pi].scale;
+      const phaseDur    = phases[pi].ms;
+
+      // Time-based exponential lerp — reaches 99% of target in one phase duration
+      const lerpFactor = 1 - Math.pow(0.01, dt / phaseDur);
+      currentScale += (targetScale - currentScale) * lerpFactor;
+
+      // ── Vertex morphing ───────────────────────────────────
+      const pos = geo.attributes.position;
+      const arr = pos.array;
+      const strength = 0.045 + (currentScale - 1) * 0.04;
+      for (let i = 0; i < arr.length; i += 3) {
+        const ox = origPos[i], oy = origPos[i + 1], oz = origPos[i + 2];
+        const d =
+          Math.sin(ox * 4.1 + t * 0.65) * Math.cos(oy * 3.7 + t * 0.50) * Math.sin(oz * 5.0 + t * 0.85) * strength +
+          Math.cos(ox * 2.0 + t * 0.30) * Math.sin(oy * 3.2 + t * 0.75) * Math.cos(oz * 2.6 + t * 0.40) * strength * 0.5;
+        arr[i]     = ox + d;
+        arr[i + 1] = oy + d;
+        arr[i + 2] = oz + d;
+      }
+      pos.needsUpdate = true;
+      geo.computeVertexNormals();
+
+      // ── Scale ─────────────────────────────────────────────
+      orb.scale.setScalar(currentScale);
+      halo1.scale.setScalar(currentScale);
+      halo2.scale.setScalar(currentScale * 1.01);
+      halo3.scale.setScalar(currentScale * 1.02);
+
+      // ── Halo glow tracks expansion ────────────────────────
+      const glow = (currentScale - 1) / 0.3;
+      halo1.material.opacity = 0.07 + glow * 0.12;
+      halo2.material.opacity = 0.03 + glow * 0.07;
+      halo3.material.opacity = 0.01 + glow * 0.04;
+
+      // ── Emissive pulses on hold ───────────────────────────
+      mat.emissiveIntensity = pi === 1
+        ? 0.20 + Math.sin(t * 3.0) * 0.08   // gentle pulse while holding
+        : 0.12 + glow * 0.18;
+
+      // ── Particle drift ────────────────────────────────────
+      const pa = ptGeo.attributes.position.array;
+      for (let i = 0; i < ptCount; i++) {
+        const s = ptSpeeds[i];
+        s.theta += s.speed;
+        const drift = 1.3 + currentScale * 0.25 + Math.sin(t * 0.6 + s.phase) * 0.08;
+        pa[i * 3]     = drift * Math.sin(s.phi) * Math.cos(s.theta);
+        pa[i * 3 + 1] = drift * Math.sin(s.phi) * Math.sin(s.theta);
+        pa[i * 3 + 2] = drift * Math.cos(s.phi);
+      }
+      ptGeo.attributes.position.needsUpdate = true;
+      ptMat.opacity = 0.35 + glow * 0.3;
+
+      // ── Slow rotation ─────────────────────────────────────
+      orb.rotation.y = t * 0.12;
+      orb.rotation.z = Math.sin(t * 0.08) * 0.12;
+      particles.rotation.y = -t * 0.06;
+
+      renderer.render(scene, camera);
+    }
+
+    animate(performance.now());
+
+    return () => {
+      cancelAnimationFrame(rafId);
+      renderer.dispose();
+      [geo, mat, ptGeo, ptMat, halo1.geometry, halo1.material,
+       halo2.geometry, halo2.material, halo3.geometry, halo3.material].forEach(o => o.dispose?.());
+      if (el.contains(renderer.domElement)) el.removeChild(renderer.domElement);
+    };
+  }, []);
+
+  return (
+    <div
+      ref={mountRef}
+      style={{ width: 240, height: 240, margin: "0 auto" }}
+      aria-hidden="true"
+    />
+  );
+}
+
 export default function ImAWifeApp() {
   const [step, setStep] = useState(0);
   const [situationId, setSituationId] = useState(null);
@@ -530,9 +689,6 @@ export default function ImAWifeApp() {
   const [bodyTouched, setBodyTouched] = useState(false);
   const [copied, setCopied] = useState(false);
   const [pastedLink, setPastedLink] = useState("");
-  const [isSendingEmail, setIsSendingEmail] = useState(false);
-  const [emailSent, setEmailSent] = useState(false);
-  const [emailError, setEmailError] = useState("");
   const [showSocialShare, setShowSocialShare] = useState(false);
   const [shareableLink, setShareableLink] = useState("");
 
@@ -576,21 +732,13 @@ export default function ImAWifeApp() {
   }, []);
 
   async function sendEmailDirectly(email, name, bodyText) {
+    // kept for URL auto-send param support
     try {
-      const response = await fetch("/api/send-email", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          recipientEmail: email,
-          senderName: name,
-          subject: subject || "Something I wanted to share 💛",
-          body: bodyText,
-        }),
-      });
-      if (response.ok) { setEmailSent(true); setStep(6); }
-    } catch (error) {
-      console.error("Auto-send failed:", error);
-    }
+      const a = document.createElement("a");
+      const params = new URLSearchParams({ subject: subject || "Something I wanted to share 💛", body: bodyText });
+      a.href = `mailto:${email}?${params.toString()}`;
+      a.click();
+    } catch (_) {}
   }
 
   function buildBodyForParams(sitId, gifts, link, name) {
@@ -693,35 +841,6 @@ export default function ImAWifeApp() {
     });
   }
 
-  async function handleSendEmail() {
-    if (!recipientEmail) return;
-    setIsSendingEmail(true);
-    setEmailError("");
-    try {
-      const response = await fetch("/api/send-email", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          recipientEmail,
-          senderName,
-          subject: subject || "Something I wanted to share 💛",
-          body,
-        }),
-      });
-      const data = await response.json();
-      if (response.ok) {
-        setEmailSent(true);
-        generateShareableLink();
-        setTimeout(() => setShowSocialShare(true), 1000);
-      } else {
-        setEmailError(data.error || "Failed to send email");
-      }
-    } catch (error) {
-      setEmailError("Network error. Check the deployed app or local Vercel dev server.");
-    } finally {
-      setIsSendingEmail(false);
-    }
-  }
 
   function generateShareableLink() {
     const baseUrl = window.location.origin + window.location.pathname;
@@ -876,17 +995,9 @@ export default function ImAWifeApp() {
           <div className="iaw-card iaw-fade" style={{ textAlign: "center" }}>
             <h2 className="iaw-heading iaw-serif">Just breathe for a second.</h2>
             <p className="iaw-sub">No rush. Stay as long as you want.</p>
-            <div className="iaw-breath-wrap">
-              <div
-                className="iaw-breath-circle"
-                style={{
-                  transform: `scale(${BREATH_PHASES[phaseIdx].scale})`,
-                  transitionDuration: `${BREATH_PHASES[phaseIdx].ms}ms`,
-                }}
-              >
-                <Wind color="rgba(255,255,255,0.9)" size={28} />
-              </div>
-              <p className="iaw-serif" style={{ fontSize: 20, color: "#C96B5E", marginBottom: 6 }}>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", margin: "4px 0 20px" }}>
+              <BreathingOrb phaseIdx={phaseIdx} phases={BREATH_PHASES} />
+              <p className="iaw-serif" style={{ fontSize: 20, color: "#C96B5E", marginBottom: 5, marginTop: 4 }}>
                 {BREATH_PHASES[phaseIdx].name}
               </p>
               <p style={{ fontSize: 12, color: "#9B708088" }}>
@@ -1057,54 +1168,6 @@ export default function ImAWifeApp() {
               />
             </div>
 
-            {/* Status */}
-            {emailError && (
-              <div className="iaw-status-err">{emailError}</div>
-            )}
-            {emailSent && (
-              <div className="iaw-status-ok">
-                <Check size={15} /> Email sent successfully!
-              </div>
-            )}
-
-            {/* Social share — only after email sent */}
-            {showSocialShare && emailSent && (
-              <div className="iaw-panel">
-                <div className="iaw-share-title">
-                  <Share2 size={16} color="#C96B5E" />
-                  <span className="iaw-serif" style={{ fontSize: 15, color: "#3D2630" }}>Inspire someone else to speak up</span>
-                </div>
-                <p style={{ fontSize: 13, color: "#7A5560", marginBottom: 14 }}>Share a moment to your story.</p>
-                <div className="iaw-share-grid">
-                  <button className="iaw-share-btn" onClick={() => shareToStory("instagram")}>
-                    <Camera size={20} color="#C96B5E" /><span>Instagram</span>
-                  </button>
-                  <button className="iaw-share-btn" onClick={() => shareToStory("facebook")}>
-                    <Users size={20} color="#5A7BA6" /><span>Facebook</span>
-                  </button>
-                  <button className="iaw-share-btn" onClick={() => shareToStory("twitter")}>
-                    <MessageCircle size={20} color="#5A7BA6" /><span>Twitter</span>
-                  </button>
-                  <button className="iaw-share-btn" onClick={() => shareToStory("copy")}>
-                    <Copy size={20} color="#C96B5E" /><span>Copy Text</span>
-                  </button>
-                </div>
-                {shareableLink && (
-                  <div className="iaw-share-link-row">
-                    <input
-                      type="text"
-                      readOnly
-                      value={shareableLink}
-                      className="iaw-input"
-                      style={{ fontSize: 12, color: "#7A5560" }}
-                    />
-                    <button className="iaw-btn iaw-btn-primary iaw-btn-sm" onClick={copyShareableLink}>
-                      <LinkIcon size={13} /> Copy
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
 
             {/* Send actions */}
             <div className="iaw-send-actions">
@@ -1117,23 +1180,14 @@ export default function ImAWifeApp() {
                   {copied ? "Copied!" : "Copy"}
                 </button>
               </div>
-              <div className="iaw-send-row">
-                <button
-                  className="iaw-btn iaw-btn-primary"
-                  disabled={!recipientEmail || isSendingEmail}
-                  onClick={handleOpenMail}
-                >
-                  <Mail size={15} /> Open Mail
-                </button>
-                <button
-                  className="iaw-btn iaw-btn-blue"
-                  disabled={!recipientEmail || isSendingEmail}
-                  onClick={handleSendEmail}
-                >
-                  {isSendingEmail ? <Loader size={15} className="iaw-spin" /> : <Send size={15} />}
-                  {isSendingEmail ? "Sending…" : "Send via SMTP"}
-                </button>
-              </div>
+              <button
+                className="iaw-btn iaw-btn-primary"
+                style={{ width: "100%" }}
+                disabled={!recipientEmail}
+                onClick={handleOpenMail}
+              >
+                <Mail size={15} /> Send Email
+              </button>
             </div>
           </div>
         )}
